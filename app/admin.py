@@ -61,7 +61,7 @@ async def user_session_or_redirect(
     _RedirectToLoginPage = HTTPException(
         status_code=302,
         headers={
-            "Location": request.url_for("login") + f"?redirect={quote(redirect_url)}"
+            "Location": str(request.url_for("login")) + f"?redirect={quote(redirect_url)}"
         },
     )
 
@@ -119,7 +119,7 @@ async def get_lookup(
                     pass
                 else:
                     return RedirectResponse(
-                        request.url_for("admin_profile")
+                        str(request.url_for("admin_profile"))
                         + f"?actor_id={ap_object.ap_id}",
                         status_code=302,
                     )
@@ -134,7 +134,7 @@ async def get_lookup(
                 )
                 if requested_object:
                     return RedirectResponse(
-                        request.url_for("admin_object")
+                        str(request.url_for("admin_object"))
                         + f"?ap_id={ap_object.ap_id}#"
                         + requested_object.permalink_id,
                         status_code=302,
