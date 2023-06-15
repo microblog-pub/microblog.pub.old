@@ -42,7 +42,7 @@
         {% endif %}
         <li>{{ header_link("index", "Notes") }}</li>
         {% if articles_count %}
-            <li>{{ header_link("articles", "Articles") }}</li>
+        <li>{{ header_link("articles", "Articles") }} <span class="counter">{{ articles_count }}</span></li>
         {% endif %}
         {% if not HIDES_FOLLOWERS or is_admin %}
         <li>{{ header_link("followers", "Followers") }} <span class="counter">{{ followers_count }}</span></li>
