@@ -17,9 +17,6 @@
 {% endmacro %}
 
 {% block content %}
-    <div class="box">
-    <h2>Notifications</h2>
-    </div>
     <div id="notifications">
     {%- for notif in notifications %}
     <div>
@@ -76,7 +73,7 @@
                 {{ utils.display_object(notif.inbox_object) }}
             {% elif notif.notification_type.value == "new_webmention" %}
                 <div class="actor-action" title="{{ notif.created_at.isoformat() }}">
-                    new webmention from 
+                    new webmention from
                     {% set facepile_item = notif.webmention.as_facepile_item %}
                     {% if facepile_item %}
                         <a href="{{ facepile_item.actor_url }}">{{ facepile_item.actor_name }}</a>
@@ -86,7 +83,7 @@
                 {{ utils.display_object(notif.outbox_object) }}
             {% elif notif.notification_type.value == "updated_webmention" %}
                 <div class="actor-action" title="{{ notif.created_at.isoformat() }}">
-                    updated webmention from 
+                    updated webmention from
                     {% set facepile_item = notif.webmention.as_facepile_item %}
                     {% if facepile_item %}
                         <a href="{{ facepile_item.actor_url }}">{{ facepile_item.actor_name }}</a>
@@ -96,7 +93,7 @@
                 {{ utils.display_object(notif.outbox_object) }}
             {% elif notif.notification_type.value == "deleted_webmention" %}
                 <div class="actor-action" title="{{ notif.created_at.isoformat() }}">
-                    deleted webmention from 
+                    deleted webmention from
                     {% set facepile_item = notif.webmention.as_facepile_item %}
                     {% if facepile_item %}
                         <a href="{{ facepile_item.actor_url }}">{{ facepile_item.actor_name }}</a>
