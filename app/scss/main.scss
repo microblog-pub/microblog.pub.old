@@ -300,7 +300,6 @@ footer {
 
 @mixin admin-button() {
     font-size: 18px;
-    line-height: 32px;
     font-family: $font-stack;
     background: $nav-button-background-color;
     color: $nav-button-text-color;
@@ -368,7 +367,7 @@ ul.poll-items {
 
 nav {
     form {
-        margin: 15px 0;
+        margin: 10px 0;
     }
 }
 
@@ -384,7 +383,7 @@ nav.flexbox {
     }
 
     ul li {
-        margin-right: 20px;
+        margin-right: 15px;
 
         &:last-child {
             margin-right: 0px;
