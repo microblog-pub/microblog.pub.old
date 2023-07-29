@@ -42,7 +42,7 @@ def is_source_containing_target(source_html: str, target_url: str) -> bool:
     return False
 
 
-@router.post("/webmentions")
+@router.post("/webmentions", response_model = None)
 async def webmention_endpoint(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),

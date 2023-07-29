@@ -33,7 +33,7 @@ basic_auth = HTTPBasic()
 router = APIRouter()
 
 
-@router.get("/.well-known/oauth-authorization-server")
+@router.get("/.well-known/oauth-authorization-server", response_model = None)
 async def well_known_authorization_server(
     request: Request,
 ) -> dict[str, Any]:
@@ -58,7 +58,7 @@ class OAuthRegisterClientRequest(BaseModel):
     scope: str | None = None
 
 
-@router.post("/oauth/register")
+@router.post("/oauth/register", response_model = None)
 async def oauth_registration_endpoint(
     register_client_request: OAuthRegisterClientRequest,
     db_session: AsyncSession = Depends(get_db_session),
@@ -93,7 +93,7 @@ async def oauth_registration_endpoint(
     )
 
 
-@router.get("/auth")
+@router.get("/auth", response_model = None)
 async def indieauth_authorization_endpoint(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -143,7 +143,7 @@ async def indieauth_authorization_endpoint(
     )
 
 
-@router.post("/admin/indieauth")
+@router.post("/admin/indieauth", response_model = None)
 async def indieauth_flow(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -227,7 +227,7 @@ async def _check_auth_code(
     return True, auth_code_req
 
 
-@router.post("/auth")
+@router.post("/auth", response_model = None)
 async def indieauth_reedem_auth_code(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -267,7 +267,7 @@ async def indieauth_reedem_auth_code(
         )
 
 
-@router.post("/token")
+@router.post("/token", response_model = None)
 async def indieauth_token_endpoint(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -476,7 +476,7 @@ async def enforce_access_token(
     return maybe_access_token_info
 
 
-@router.post("/revoke_token")
+@router.post("/revoke_token", response_model = None)
 async def indieauth_revocation_endpoint(
     request: Request,
     token: str = Form(),
@@ -497,7 +497,7 @@ async def indieauth_revocation_endpoint(
     )
 
 
-@router.post("/token_introspection")
+@router.post("/token_introspection", response_model = None)
 async def oauth_introspection_endpoint(
     request: Request,
     credentials: HTTPBasicCredentials = Depends(basic_auth),
