@@ -13,14 +13,24 @@
 {% for outbox_object in outbox %}
 
     {% if outbox_object.ap_type == "Announce" %}
-        <div class="actor-action">You shared <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
-        {{ utils.display_object(outbox_object.relates_to_anybox_object) }}
+        <div class="h-entry" id="{{ outbox_object.permalink_id }}">
+            <div class="actor-action">You shared <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
+            <div class="h-cite u-repost-of">
+                {{ utils.display_object(outbox_object.relates_to_anybox_object, is_h_entry=False) }}
+            </div>
+        </div>
     {% elif outbox_object.ap_type == "Like" %}
-        <div class="actor-action">You liked <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
-        {{ utils.display_object(outbox_object.relates_to_anybox_object) }}
+        <div class="h-entry" id="{{ outbox_object.permalink_id }}">
+            <div class="actor-action">You liked <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
+            <div class="h-cite u-repost-of">
+                {{ utils.display_object(outbox_object.relates_to_anybox_object, is_h_entry=False) }}
+            </div>
+        </div>
     {% elif outbox_object.ap_type == "Follow" %}
-        <div class="actor-action">You followed <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
-        {{ utils.display_actor(outbox_object.relates_to_actor, actors_metadata) }}
+        <div class="h-entry" id="{{ outbox_object.permalink_id }}">
+            <div class="actor-action">You followed <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
+            {{ utils.display_actor(outbox_object.relates_to_actor, actors_metadata, embedded=True) }}
+        </div>
     {% elif outbox_object.ap_type in ["Article", "Note", "Video", "Question"] %}
         {{ utils.display_object(outbox_object) }}
     {% endif %}

@@ -9,7 +9,7 @@
 {% block content %}
 
 {% if show_filters %}
-{{ utils.display_box_filters("admin_inbox") }}
+    {{ utils.display_box_filters("admin_inbox") }}
 {% endif %}
 
 {% if not inbox %}
@@ -20,16 +20,26 @@
 
 {% for inbox_object in inbox %}
 {% if inbox_object.ap_type == "Announce" %}
-    {{ utils.actor_action(inbox_object, "shared", with_icon=True) }}
-    {{ utils.display_object(inbox_object.relates_to_anybox_object) }}
+    <div class="h-entry" id="{{ inbox_object.permalink_id }}">
+        {{ utils.actor_action(inbox_object, "shared", with_icon=True) }}
+        <div class="h-cite u-repost-of">
+            {{ utils.display_object(inbox_object.relates_to_anybox_object, is_h_entry=False) }}
+        </div>
+    </div>
 {% elif inbox_object.ap_type in ["Article", "Note", "Video", "Page", "Question"] %}
-{{ utils.display_object(inbox_object) }}
+    {{ utils.display_object(inbox_object) }}
 {% elif inbox_object.ap_type == "Follow" %}
-    {{ utils.actor_action(inbox_object, "followed you") }}
-    {{ utils.display_actor(inbox_object.actor, actors_metadata) }}
+    <div class="h-entry" id="{{ inbox_object.permalink_id }}">
+        {{ utils.actor_action(inbox_object, "followed you") }}
+        {{ utils.display_actor(inbox_object.actor, actors_metadata, embedded=True) }}
+    </div>
 {% elif inbox_object.ap_type == "Like" %}
-    {{ utils.actor_action(inbox_object, "liked one of your posts", with_icon=True) }}
-    {{ utils.display_object(inbox_object.relates_to_anybox_object) }}
+    <div class="h-entry" id="{{ inbox_object.permalink_id }}">
+        {{ utils.actor_action(inbox_object, "liked one of your posts", with_icon=True) }}
+        <div class="h-cite u-repost-of">
+          {{ utils.display_object(inbox_object.relates_to_anybox_object, is_h_entry=False) }}
+        </div>
+    </div>
 {% else %}
     <p>
     Implement {{ inbox_object.ap_type }}
