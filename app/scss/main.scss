@@ -141,7 +141,7 @@ dl {
   }
 }
 
-.shared-header {
+.shared-header .actor-action {
     margin-left: 20px;
     margin-top: 30px;
     margin-bottom: -20px;
@@ -150,6 +150,9 @@ dl {
     }
     span {
       color: $muted-color;
+    }
+    span.new {
+      color: $secondary-color;
     }
 }
 
@@ -218,7 +221,7 @@ a {
 }
 #main {
     display: flex;
-    flex: 1; 
+    flex: 1;
 }
 main {
     width: 100%;
@@ -247,7 +250,7 @@ footer {
   margin: 20px auto;
   color: $muted-color;
   p {
-    margin: 0;    
+    margin: 0;
   }
 }
 .tiny-actor-icon {
@@ -376,7 +379,7 @@ nav {
 }
 
 nav.flexbox {
-    ul {        
+    ul {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -464,17 +467,6 @@ a.label-btn {
     color: $secondary-color;
 }
 
-.actor-action {
-  margin-top:20px;
-  margin-bottom:-20px;
-  padding: 0 20px;
-  span {
-    color: $muted-color;
-  }
-  span.new {
-    color: $secondary-color;
-  }
-}
 .actor-metadata {
     color: $muted-color;
 }

@@ -12,7 +12,7 @@
 {% if inbox_object.ap_type == "Announce" %}
     {{ utils.display_object(inbox_object.relates_to_anybox_object) }}
 {% elif inbox_object.ap_type in ["Article", "Note", "Video"] %}
-{{ utils.display_object(inbox_object) }}
+    {{ utils.display_object(inbox_object) }}
 {% endif %}
 {% endfor %}
 
