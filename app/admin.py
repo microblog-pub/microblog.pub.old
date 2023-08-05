@@ -54,7 +54,7 @@ async def user_session_or_redirect(
         if "redirect_url" in form_data:
             redirect_url = form_data["redirect_url"]
         else:
-            redirect_url = request.url_for("admin_stream")
+            redirect_url = str(request.url_for("admin_stream"))
     else:
         redirect_url = str(request.url)
 
