@@ -25,6 +25,7 @@ from app import templates
 from app.actor import LOCAL_ACTOR
 from app.actor import fetch_actor
 from app.actor import get_actors_metadata
+from app.actor import list_actors
 from app.boxes import get_inbox_object_by_ap_id
 from app.boxes import get_outbox_object_by_ap_id
 from app.boxes import send_block
@@ -97,6 +98,7 @@ async def get_lookup(
     error = None
     ap_object = None
     actors_metadata = {}
+    actor_recommendations = await list_actors(db_session, 2500)
     if query:
         try:
             ap_object = await lookup(db_session, query)
@@ -152,6 +154,7 @@ async def get_lookup(
             "query": query,
             "ap_object": ap_object,
             "actors_metadata": actors_metadata,
+            "actor_recommendations": actor_recommendations,
             "error": error,
         },
     )
