@@ -26,7 +26,7 @@
             {{ utils.display_object(inbox_object.relates_to_anybox_object, is_h_entry=False) }}
         </div>
     </div>
-{% elif inbox_object.ap_type in ["Article", "Note", "Video", "Page", "Question"] %}
+{% elif inbox_object.ap_type in ["Article", "Note", "Video", "Page", "Question", "Event"] %}
     {{ utils.display_object(inbox_object) }}
 {% elif inbox_object.ap_type == "Follow" %}
     <div class="h-entry" id="{{ inbox_object.permalink_id }}">
