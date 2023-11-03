@@ -17,7 +17,7 @@ tomli = "^2.0.1"
 httpx = {version = "0.25.1", extras = ["http2"]}
 SQLAlchemy = {extras = ["asyncio"], version = "^1.4.39"}
 alembic = "^1.8.0"
-bleach = "^5.0.0"
+bleach = "^6.1.0"
 prompt-toolkit = "^3.0.29"
 tomli-w = "^1.0.0"
 python-dateutil = "^2.8.2"
