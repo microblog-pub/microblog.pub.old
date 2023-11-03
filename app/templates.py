@@ -136,7 +136,7 @@ async def render_template(
 
 
 # HTML/templates helper
-ALLOWED_TAGS = [
+ALLOWED_TAGS = {
     "a",
     "abbr",
     "acronym",
@@ -175,7 +175,7 @@ ALLOWED_TAGS = [
     "img",
     "div",
     "span",
-]
+}
 
 ALLOWED_CSS_CLASSES = [
     # microformats
