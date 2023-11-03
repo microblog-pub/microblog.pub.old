@@ -12,7 +12,7 @@ fastapi = "^0.104.1"
 pycryptodome = "^3.19.0"
 bcrypt = "^4.0.1"
 itsdangerous = "^2.1.2"
-python-multipart = "^0.0.5"
+python-multipart = "^0.0.6"
 tomli = "^2.0.1"
 httpx = {version = "0.23.0", extras = ["http2"]}
 SQLAlchemy = {extras = ["asyncio"], version = "^1.4.39"}
