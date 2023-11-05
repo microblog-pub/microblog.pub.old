@@ -282,8 +282,8 @@ class BaseModel(pydantic.BaseModel):
 
 class Attachment(BaseModel):
     type: str
-    media_type: str | None
-    name: str | None
+    media_type: str | None = None
+    name: str | None = None
     url: str
 
     # Extra fields for the templates (and only for media)
