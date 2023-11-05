@@ -19,7 +19,7 @@ from app.indieauth import verify_access_token
 router = APIRouter()
 
 
-@router.get("/micropub", response_model = None)
+@router.get("/micropub", response_model=None)
 async def micropub_endpoint(
     request: Request,
     access_token_info: AccessTokenInfo = Depends(verify_access_token),
@@ -64,7 +64,7 @@ def _prop_get(dat: dict[str, Any], key: str) -> str:
         return val
 
 
-@router.post("/micropub", response_model = None)
+@router.post("/micropub", response_model=None)
 async def post_micropub_endpoint(
     request: Request,
     access_token_info: AccessTokenInfo = Depends(verify_access_token),

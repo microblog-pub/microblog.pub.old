@@ -291,12 +291,21 @@ async def fetch_actor(
     else:
         raise ap.ObjectNotFoundError(actor_id)
 
-async def list_actors(
-    db_session: AsyncSession,
-    limit: int = 100
-) -> list["ActorModel"]:
+
+async def list_actors(db_session: AsyncSession, limit: int = 100) -> list["ActorModel"]:
     from app import models
-    return (await db_session.scalars(select(models.Actor).where(models.Actor.is_deleted.is_(False)).limit(limit))).unique().all()
+
+    return (
+        (
+            await db_session.scalars(
+                select(models.Actor)
+                .where(models.Actor.is_deleted.is_(False))
+                .limit(limit)
+            )
+        )
+        .unique()
+        .all()
+    )
 
 
 async def update_actor_if_needed(
