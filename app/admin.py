@@ -53,7 +53,7 @@ async def user_session_or_redirect(
     if request.method == "POST":
         form_data = await request.form()
         if "redirect_url" in form_data:
-            redirect_url = form_data["redirect_url"]
+            redirect_url = str(form_data["redirect_url"])
         else:
             redirect_url = str(request.url_for("admin_stream"))
     else:
@@ -1161,15 +1161,28 @@ async def admin_actions_new(
         content_warning = None
 
     if not content:
-        raise HTTPException(status_code=422, detail="Error: objec must have a content")
+        raise HTTPException(status_code=422, detail="Error: object must have a content")
 
     # XXX: for some reason, no files restuls in an empty single file
     uploads = []
     raw_form_data = await request.form()
-    if len(files) >= 1 and files[0].filename:
+    if len(files) >= 1:
         for f in files:
-            upload = await save_upload(db_session, f)
-            uploads.append((upload, f.filename, raw_form_data.get("alt_" + f.filename)))
+            if f.filename is not None:
+                upload = await save_upload(db_session, f)
+                if upload is not None:
+                    alt = raw_form_data.get("alt_" + f.filename)
+                    uploads.append(
+                        (
+                            upload,
+                            f.filename,
+                            str(alt) if alt is not None else None,
+                        )
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=422, detail="Error: Unable to process upload"
+                    )
 
     ap_type = "Note"
 
@@ -1180,12 +1193,12 @@ async def admin_actions_new(
         poll_answers = []
         for i in ["1", "2", "3", "4"]:
             if answer := raw_form_data.get(f"poll_answer_{i}"):
-                poll_answers.append(answer)
+                poll_answers.append(str(answer))
 
         if not poll_answers or len(poll_answers) < 2:
             raise ValueError("Question must have at least 2 answers")
 
-        poll_duration_in_minutes = int(raw_form_data["poll_duration"])
+        poll_duration_in_minutes = int(str(raw_form_data["poll_duration"]))
     elif name:
         ap_type = "Article"
 
@@ -1218,7 +1231,7 @@ async def admin_actions_vote(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> RedirectResponse:
     form_data = await request.form()
-    names = form_data.getlist("name")
+    names = list(map(lambda data: str(data), form_data.getlist("name")))
     logger.info(f"{names=}")
     await boxes.send_vote(
         db_session,

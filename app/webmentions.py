@@ -49,8 +49,8 @@ async def webmention_endpoint(
 ) -> JSONResponse:
     form_data = await request.form()
     try:
-        source = form_data["source"]
-        target = form_data["target"]
+        source = str(form_data["source"])
+        target = str(form_data["target"])
 
         if source == target:
             raise ValueError("source URL is the same as target")

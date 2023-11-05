@@ -154,13 +154,13 @@ async def indieauth_flow(
     logger.info(f"{form_data=}")
 
     # Params needed for the redirect
-    redirect_uri = form_data["redirect_uri"]
+    redirect_uri = str(form_data["redirect_uri"])
     code = secrets.token_urlsafe(32)
     iss = config.ID + "/"
     state = form_data["state"]
 
-    scope = " ".join(form_data.getlist("scopes"))
-    client_id = form_data["client_id"]
+    scope = " ".join(map(lambda data: str(data), form_data.getlist("scopes")))
+    client_id = str(form_data["client_id"])
 
     # TODO: Ensure that me is correct
     # me = form_data.get("me")
@@ -168,8 +168,8 @@ async def indieauth_flow(
     # XXX: should always be code
     # response_type = form_data["response_type"]
 
-    code_challenge = form_data["code_challenge"]
-    code_challenge_method = form_data["code_challenge_method"]
+    code_challenge = str(form_data["code_challenge"])
+    code_challenge_method = str(form_data["code_challenge_method"])
 
     auth_request = models.IndieAuthAuthorizationRequest(
         code=code,
@@ -238,11 +238,11 @@ async def indieauth_reedem_auth_code(
     if grant_type != "authorization_code":
         raise ValueError(f"Invalid grant_type {grant_type}")
 
-    code = form_data["code"]
+    code = str(form_data["code"])
 
     # These must match the params from the first request
-    client_id = form_data["client_id"]
-    redirect_uri = form_data["redirect_uri"]
+    client_id = str(form_data["client_id"])
+    redirect_uri = str(form_data["redirect_uri"])
     # code_verifier is optional for backward compat
     code_verifier = form_data.get("code_verifier")
 
@@ -251,7 +251,7 @@ async def indieauth_reedem_auth_code(
         code=code,
         client_id=client_id,
         redirect_uri=redirect_uri,
-        code_verifier=code_verifier,
+        code_verifier=str(code_verifier) if code_verifier is not None else None,
     )
     if is_code_valid:
         return JSONResponse(
@@ -279,19 +279,19 @@ async def indieauth_token_endpoint(
         raise ValueError(f"Invalid grant_type {grant_type}")
 
     # These must match the params from the first request
-    client_id = form_data["client_id"]
+    client_id = str(form_data["client_id"])
     code_verifier = form_data.get("code_verifier")
 
     if grant_type == "authorization_code":
-        code = form_data["code"]
-        redirect_uri = form_data["redirect_uri"]
+        code = str(form_data["code"])
+        redirect_uri = str(form_data["redirect_uri"])
         # code_verifier is optional for backward compat
         is_code_valid, auth_code_request = await _check_auth_code(
             db_session,
             code=code,
             client_id=client_id,
             redirect_uri=redirect_uri,
-            code_verifier=code_verifier,
+            code_verifier=str(code_verifier) if code_verifier is not None else None,
         )
         if not is_code_valid or (auth_code_request and not auth_code_request.scope):
             return JSONResponse(
@@ -300,7 +300,7 @@ async def indieauth_token_endpoint(
             )
 
     elif grant_type == "refresh_token":
-        refresh_token = form_data["refresh_token"]
+        refresh_token = str(form_data["refresh_token"])
         access_token = (
             await db_session.scalars(
                 select(models.IndieAuthAccessToken)
@@ -397,7 +397,7 @@ async def verify_access_token(
     if not token:
         form_data = await request.form()
         if "access_token" in form_data:
-            token = form_data.get("access_token")
+            token = str(form_data["access_token"])
 
     is_token_valid, access_token = await _check_access_token(db_session, token)
     if not is_token_valid:

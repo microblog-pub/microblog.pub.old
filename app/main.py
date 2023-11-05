@@ -227,7 +227,7 @@ logger.add(sys.stdout, format=logger_format, level="DEBUG" if DEBUG else "INFO")
 async def custom_http_exception_handler(
     request: Request,
     exc: StarletteHTTPException,
-) -> templates.TemplateResponse | JSONResponse:
+) -> templates.TemplateResponse | JSONResponse | Response:
     accept_value = request.headers.get("accept")
     if (
         accept_value
@@ -1441,7 +1441,7 @@ async def serve_proxy_media_resized(
     if size not in {50, 740}:
         raise ValueError("Unsupported size")
 
-    is_webp_supported = "image/webp" in request.headers.get("accept")
+    is_webp_supported = "image/webp" in str(request.headers.get("accept"))
 
     # Decode the base64-encoded URL
     url = base64.urlsafe_b64decode(encoded_url).decode()
@@ -1572,7 +1572,7 @@ async def serve_attachment_thumbnail(
     if not upload or not upload.has_thumbnail:
         raise HTTPException(status_code=404)
 
-    is_webp_supported = "image/webp" in request.headers.get("accept")
+    is_webp_supported = "image/webp" in str(request.headers.get("accept"))
 
     if is_webp_supported:
         return FileResponse(

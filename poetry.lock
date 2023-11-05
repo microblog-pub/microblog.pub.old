@@ -2150,13 +2150,13 @@ files = [
 
 [[package]]
 name = "types-bleach"
-version = "5.0.3.1"
+version = "6.1.0.0"
 description = "Typing stubs for bleach"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "types-bleach-5.0.3.1.tar.gz", hash = "sha256:ce8772ea5126dab1883851b41e3aeff229aa5213ced36096990344e632e92373"},
-    {file = "types_bleach-5.0.3.1-py3-none-any.whl", hash = "sha256:af5f1b3a54ff279f54c29eccb2e6988ebb6718bc4061469588a5fd4880a79287"},
+    {file = "types-bleach-6.1.0.0.tar.gz", hash = "sha256:3cf0e55d4618890a00af1151f878b2e2a7a96433850b74e12bede7663d774532"},
+    {file = "types_bleach-6.1.0.0-py3-none-any.whl", hash = "sha256:f0bc75d0f6475036ac69afebf37c41d116dfba78dae55db80437caf0fcd35c28"},
 ]
 
 [[package]]
@@ -2172,13 +2172,13 @@ files = [
 
 [[package]]
 name = "types-emoji"
-version = "1.7.4"
+version = "2.1.0.3"
 description = "Typing stubs for emoji"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-emoji-1.7.4.tar.gz", hash = "sha256:1e1341399ed1dd10a54d348ec7bb0708a56cd04f79702941fef5db60d276ea46"},
-    {file = "types_emoji-1.7.4-py3-none-any.whl", hash = "sha256:b7b7e468fb04b16514a2e9dfe67a352003ee5bf657230986b3a41fcb0fa69fa2"},
+    {file = "types-emoji-2.1.0.3.tar.gz", hash = "sha256:98ddb0ff5f48622550c431206e4dbfcbde8ca8bc03fcfbb9962a778d2049aa13"},
+    {file = "types_emoji-2.1.0.3-py3-none-any.whl", hash = "sha256:32fe5cf02c4834bb59579380f600a89d1471571fb56e36465cbd0c7d95f669ca"},
 ]
 
 [[package]]
@@ -2194,13 +2194,13 @@ files = [
 
 [[package]]
 name = "types-pillow"
-version = "9.5.0.6"
+version = "10.1.0.0"
 description = "Typing stubs for Pillow"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "types-Pillow-9.5.0.6.tar.gz", hash = "sha256:6a0cad40686e5c35fe7ada70f52bd3970395d31ece33486609e5420e820a9e4e"},
-    {file = "types_Pillow-9.5.0.6-py3-none-any.whl", hash = "sha256:1d238abaa9d529b04941d805b7f4d3f7df30702bb14521ec507617f117406fb4"},
+    {file = "types-Pillow-10.1.0.0.tar.gz", hash = "sha256:0f5e7cf010ed226800cb5821e87781e5d0e81257d948a9459baa74a8c8b7d822"},
+    {file = "types_Pillow-10.1.0.0-py3-none-any.whl", hash = "sha256:f97f596b6a39ddfd26da3eb67421062193e10732d2310f33898d36f9694331b5"},
 ]
 
 [[package]]
@@ -2230,13 +2230,13 @@ urllib3 = ">=2"
 
 [[package]]
 name = "types-tabulate"
-version = "0.8.11"
+version = "0.9.0.3"
 description = "Typing stubs for tabulate"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-tabulate-0.8.11.tar.gz", hash = "sha256:17a5fa3b5ca453815778fc9865e8ecd0118b07b2b9faff3e2b06fe448174dd5e"},
-    {file = "types_tabulate-0.8.11-py3-none-any.whl", hash = "sha256:af811268241e8fb87b63c052c87d1e329898a93191309d5d42111372232b2e0e"},
+    {file = "types-tabulate-0.9.0.3.tar.gz", hash = "sha256:197651f9d6467193cd166d8500116a6d3a26f2a4eb2db093bc9535ee1c0be55e"},
+    {file = "types_tabulate-0.9.0.3-py3-none-any.whl", hash = "sha256:462d1b62e01728416e8277614d6a3eb172d53a8efaf04a04a973ff2dd45238f6"},
 ]
 
 [[package]]
@@ -2582,4 +2582,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "7e572bb63478a99bb9e599e32ee6b7c76ef81c016ca21c02dd5d80ef2b340e46"
+content-hash = "c54a80c020b6cf3bc4ca59b1788013b79796ee71306b151f8514463fd81aab93"
