@@ -203,6 +203,11 @@ header {
       font-size: 0.85em;
       color: $muted-color;
     }
+    vertical-align: top;
+    margin: 0.5em;
+  }
+  .follow {
+    vertical-align: top;
   }
   .counter {
     color: $muted-color;
@@ -211,6 +216,9 @@ header {
     a:hover {
       text-decoration: underline;
     }
+  }
+  img {
+    height: 2em;
   }
 }
 a {
