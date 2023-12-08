@@ -1,11 +1,12 @@
 <header id="header">
 
 <div class="h-card p-author">
-<data class="u-photo" value="{{ local_actor.icon_url }}"></data>
+<data class="u-photo" value="{{ local_actor.icon_url }}"><img src="{{ local_actor.icon_url }}"></data>
 <a href="{{ local_actor.url }}" class="u-url u-uid no-hover title">
 	<span class="name">{{ local_actor.name }}</span>
 	<span class="p-name handle">{{ local_actor.handle }}</span>
 </a>
+<a class="label-btn follow" href="https://blog.joaocosta.eu/remote_follow">Follow</a>
 
 <div class="p-note summary">
 {{ local_actor.summary | safe }}
@@ -50,7 +51,6 @@
         {% if not HIDES_FOLLOWING or is_admin %}
         <li>{{ header_link("following", "Following") }} <span class="counter">{{ following_count }}</span></li>
         {% endif %}
-        <li>{{ header_link("get_remote_follow", "Remote follow") }}</li>
         {% for navbar_item in NAVBAR_ITEMS.EXTRA_NAVBAR_ITEMS %}
             {{ navbar_item_link(navbar_item) }}
         {% endfor %}
