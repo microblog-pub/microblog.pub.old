@@ -227,7 +227,7 @@ logger.add(sys.stdout, format=logger_format, level="DEBUG" if DEBUG else "INFO")
 async def custom_http_exception_handler(
     request: Request,
     exc: StarletteHTTPException,
-) -> templates.TemplateResponse | JSONResponse:
+) -> templates.TemplateResponse | JSONResponse | Response:
     accept_value = request.headers.get("accept")
     if (
         accept_value
@@ -282,7 +282,7 @@ async def redirect_to_remote_instance(
     )
 
 
-@app.get(config.NavBarItems.NOTES_PATH, response_model = None)
+@app.get(config.NavBarItems.NOTES_PATH, response_model=None)
 async def index(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -341,7 +341,7 @@ async def index(
     )
 
 
-@app.get("/articles", response_model = None)
+@app.get("/articles", response_model=None)
 async def articles(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -455,7 +455,7 @@ async def _empty_followx_collection(
     }
 
 
-@app.get("/followers", response_model = None)
+@app.get("/followers", response_model=None)
 async def followers(
     request: Request,
     page: bool | None = None,
@@ -519,7 +519,7 @@ async def followers(
     )
 
 
-@app.get("/following", response_model = None)
+@app.get("/following", response_model=None)
 async def following(
     request: Request,
     page: bool | None = None,
@@ -588,7 +588,7 @@ async def following(
     )
 
 
-@app.get("/outbox", response_model = None)
+@app.get("/outbox", response_model=None)
 async def outbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -632,7 +632,7 @@ async def outbox(
     )
 
 
-@app.post("/outbox", response_model = None)
+@app.post("/outbox", response_model=None)
 async def post_outbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -675,7 +675,7 @@ async def post_outbox(
     )
 
 
-@app.get("/featured", response_model = None)
+@app.get("/featured", response_model=None)
 async def featured(
     db_session: AsyncSession = Depends(get_db_session),
     _: httpsig.HTTPSigInfo = Depends(httpsig.httpsig_checker),
@@ -805,7 +805,7 @@ async def _fetch_webmentions(
     ).all()
 
 
-@app.get("/o/{public_id}", response_model = None)
+@app.get("/o/{public_id}", response_model=None)
 async def outbox_by_public_id(
     public_id: str,
     request: Request,
@@ -934,7 +934,7 @@ def _merge_replies(
     return reply_tree_node
 
 
-@app.get("/articles/{short_id}/{slug}", response_model = None)
+@app.get("/articles/{short_id}/{slug}", response_model=None)
 async def article_by_slug(
     short_id: str,
     slug: str,
@@ -984,7 +984,7 @@ async def article_by_slug(
     )
 
 
-@app.get("/o/{public_id}/activity", response_model = None)
+@app.get("/o/{public_id}/activity", response_model=None)
 async def outbox_activity_by_public_id(
     public_id: str,
     request: Request,
@@ -1007,7 +1007,7 @@ async def outbox_activity_by_public_id(
     return ActivityPubResponse(ap.wrap_object(maybe_object.ap_object))
 
 
-@app.get("/t/{tag}", response_model = None)
+@app.get("/t/{tag}", response_model=None)
 async def tag_by_name(
     tag: str,
     request: Request,
@@ -1079,7 +1079,7 @@ async def tag_by_name(
     )
 
 
-@app.get("/e/{name}", response_model = None)
+@app.get("/e/{name}", response_model=None)
 def emoji_by_name(name: str) -> ActivityPubResponse:
     try:
         emoji = EMOJIS_BY_NAME[f":{name}:"]
@@ -1089,7 +1089,7 @@ def emoji_by_name(name: str) -> ActivityPubResponse:
     return ActivityPubResponse({"@context": ap.AS_EXTENDED_CTX, **emoji})
 
 
-@app.get("/inbox", response_model = None)
+@app.get("/inbox", response_model=None)
 async def get_inbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1161,7 +1161,7 @@ async def get_inbox(
     return ActivityPubResponse(collection_page)
 
 
-@app.post("/inbox", response_model = None)
+@app.post("/inbox", response_model=None)
 async def inbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1174,7 +1174,7 @@ async def inbox(
     return Response(status_code=202)
 
 
-@app.get("/remote_follow", response_model = None)
+@app.get("/remote_follow", response_model=None)
 async def get_remote_follow(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1187,7 +1187,7 @@ async def get_remote_follow(
     )
 
 
-@app.post("/remote_follow", response_model = None)
+@app.post("/remote_follow", response_model=None)
 async def post_remote_follow(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1209,7 +1209,7 @@ async def post_remote_follow(
     )
 
 
-@app.get("/remote_interaction", response_model = None)
+@app.get("/remote_interaction", response_model=None)
 async def remote_interaction(
     request: Request,
     ap_id: str,
@@ -1230,7 +1230,7 @@ async def remote_interaction(
     )
 
 
-@app.post("/remote_interaction", response_model = None)
+@app.post("/remote_interaction", response_model=None)
 async def post_remote_interaction(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1253,7 +1253,7 @@ async def post_remote_interaction(
     )
 
 
-@app.get("/.well-known/webfinger", response_model = None)
+@app.get("/.well-known/webfinger", response_model=None)
 async def wellknown_webfinger(resource: str) -> JSONResponse:
     """Exposes/servers WebFinger data."""
     if resource not in [
@@ -1288,7 +1288,7 @@ async def wellknown_webfinger(resource: str) -> JSONResponse:
     )
 
 
-@app.get("/.well-known/nodeinfo", response_model = None)
+@app.get("/.well-known/nodeinfo", response_model=None)
 async def well_known_nodeinfo() -> dict[str, Any]:
     return {
         "links": [
@@ -1300,7 +1300,7 @@ async def well_known_nodeinfo() -> dict[str, Any]:
     }
 
 
-@app.get("/nodeinfo", response_model = None)
+@app.get("/nodeinfo", response_model=None)
 async def nodeinfo(
     db_session: AsyncSession = Depends(get_db_session),
 ):
@@ -1374,7 +1374,7 @@ def _add_cache_control(headers: dict[str, str]) -> dict[str, str]:
     return {**headers, "Cache-Control": "max-age=31536000"}
 
 
-@app.get("/proxy/media/{exp}/{sig}/{encoded_url}", response_model = None)
+@app.get("/proxy/media/{exp}/{sig}/{encoded_url}", response_model=None)
 async def serve_proxy_media(
     request: Request,
     exp: int,
@@ -1429,7 +1429,7 @@ async def serve_proxy_media(
     )
 
 
-@app.get("/proxy/media/{exp}/{sig}/{encoded_url}/{size}", response_model = None)
+@app.get("/proxy/media/{exp}/{sig}/{encoded_url}/{size}", response_model=None)
 async def serve_proxy_media_resized(
     request: Request,
     exp: int,
@@ -1441,7 +1441,7 @@ async def serve_proxy_media_resized(
     if size not in {50, 740}:
         raise ValueError("Unsupported size")
 
-    is_webp_supported = "image/webp" in request.headers.get("accept")
+    is_webp_supported = "image/webp" in str(request.headers.get("accept"))
 
     # Decode the base64-encoded URL
     url = base64.urlsafe_b64decode(encoded_url).decode()
@@ -1532,7 +1532,7 @@ async def serve_proxy_media_resized(
         )
 
 
-@app.get("/attachments/{content_hash}/{filename}", response_model = None)
+@app.get("/attachments/{content_hash}/{filename}", response_model=None)
 async def serve_attachment(
     content_hash: str,
     filename: str,
@@ -1555,7 +1555,7 @@ async def serve_attachment(
     )
 
 
-@app.get("/attachments/thumbnails/{content_hash}/{filename}", response_model = None)
+@app.get("/attachments/thumbnails/{content_hash}/{filename}", response_model=None)
 async def serve_attachment_thumbnail(
     request: Request,
     content_hash: str,
@@ -1572,7 +1572,7 @@ async def serve_attachment_thumbnail(
     if not upload or not upload.has_thumbnail:
         raise HTTPException(status_code=404)
 
-    is_webp_supported = "image/webp" in request.headers.get("accept")
+    is_webp_supported = "image/webp" in str(request.headers.get("accept"))
 
     if is_webp_supported:
         return FileResponse(
@@ -1718,7 +1718,7 @@ async def rss_feed(
     )
 
 
-@app.get("/feed.atom", response_model = None)
+@app.get("/feed.atom", response_model=None)
 async def atom_feed(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> PlainTextResponse:
