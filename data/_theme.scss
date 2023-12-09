@@ -114,7 +114,7 @@ div#following>ul>li>div.ap-object,
 div#followers>ul>li>div.ap-object {
   @include box-like();
   @include centered();
-  margin-top: 2em;
+  margin-top: 1em;
   margin-bottom: 0;
 
   div.ap-object {
