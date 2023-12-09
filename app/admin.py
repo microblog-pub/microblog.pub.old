@@ -1168,7 +1168,7 @@ async def admin_actions_new(
     raw_form_data = await request.form()
     if len(files) >= 1:
         for f in files:
-            if f.filename is not None:
+            if f.filename is not None and f.filename is not "":
                 upload = await save_upload(db_session, f)
                 if upload is not None:
                     alt = raw_form_data.get("alt_" + f.filename)
