@@ -64,6 +64,19 @@ header#header {
   padding-top: 0.5em;
   padding-bottom: 0.5em;
 
+  .title {
+    vertical-align: top;
+    margin: 0.5em;
+  }
+
+  .follow {
+    vertical-align: top;
+  }
+
+  img {
+    height: 2em;
+  }
+
   .p-author {
     padding: 0 1.1em 0.5em 1.1em;
     #profile-props {
@@ -101,7 +114,7 @@ div#following>ul>li>div.ap-object,
 div#followers>ul>li>div.ap-object {
   @include box-like();
   @include centered();
-  margin-top: 2em;
+  margin-top: 1em;
   margin-bottom: 0;
 
   div.ap-object {
