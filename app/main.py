@@ -492,12 +492,12 @@ async def followers(
     if config.HIDES_FOLLOWERS and not is_current_user_admin(request):
         raise HTTPException(status_code=404)
 
-    # We only show the most recent 20 followers on the public website
+    # We only show the most recent 100 followers on the public website
     followers_result = await db_session.scalars(
         select(models.Follower)
         .options(joinedload(models.Follower.actor))
         .order_by(models.Follower.created_at.desc())
-        .limit(20)
+        .limit(100)
     )
     followers = followers_result.unique().all()
 
@@ -514,7 +514,7 @@ async def followers(
         "followers.html",
         {
             "followers": followers,
-            "actors_metadata": actors_metadata,
+            "actors_metadata": actors_metadata
         },
     )
 
@@ -556,14 +556,14 @@ async def following(
     if config.HIDES_FOLLOWING and not is_current_user_admin(request):
         raise HTTPException(status_code=404)
 
-    # We only show the most recent 20 follows on the public website
+    # We only show the most recent 100 follows on the public website
     following = (
         (
             await db_session.scalars(
                 select(models.Following)
                 .options(joinedload(models.Following.actor))
                 .order_by(models.Following.created_at.desc())
-                .limit(20)
+                .limit(100)
             )
         )
         .unique()
