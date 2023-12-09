@@ -512,10 +512,7 @@ async def followers(
         db_session,
         request,
         "followers.html",
-        {
-            "followers": followers,
-            "actors_metadata": actors_metadata
-        },
+        {"followers": followers, "actors_metadata": actors_metadata},
     )
 
 
