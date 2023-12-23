@@ -1,4 +1,5 @@
 {%- import "utils.html" as utils with context -%}
+{%- import "components/pagination.html" as pagination -%}
 {% extends "layout.html" %}
 
 {% block head %}
@@ -112,14 +113,6 @@
     {%- endfor %}
     </div>
 
-{% if next_cursor %}
-<div class="box">
-    <p>
-        <a href="{{ request.url._path }}?cursor={{ next_cursor }}">
-            See more{% if more_unread_count %} ({{ more_unread_count }} unread left){% endif %}
-        </a>
-    </p>
-</div>
-{% endif %}
+{{ pagination.pagination(request.url._path, next_cursor)}}
 
 {% endblock %}

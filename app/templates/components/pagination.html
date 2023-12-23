@@ -1,0 +1,9 @@
+{% macro pagination(current_path, next_cursor=None, filter_by=None) %}
+{% block pagination scoped %}
+{% if next_cursor %}
+<div class="box">
+    <p><a href="{{ current_path }}?cursor={{ next_cursor }}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}">See more</a></p>
+</div>
+{% endif %}
+{% endblock %}
+{% endmacro %}
