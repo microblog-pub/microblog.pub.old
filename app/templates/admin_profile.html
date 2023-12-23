@@ -1,4 +1,5 @@
 {%- import "utils.html" as utils with context -%}
+{%- import "components/actor.html" as actor -%}
 
 {% block head %}
 <link rel="manifest" href="/static/pwa.webmanifest" />
@@ -11,7 +12,7 @@
     {% for inbox_object in inbox_objects %}
         {% if inbox_object.ap_type == "Announce" %}
             <div class="h-entry" id="{{ inbox_object.permalink_id }}">
-                {{ utils.actor_action(inbox_object, "shared", with_icon=True) }}
+                {{ actor.actor_action(url_for("admin_profile"), inbox_object, "shared", with_icon=True) }}
                 <div class="h-cite u-repost-of">
                     {{ utils.display_object(inbox_object.relates_to_anybox_object, is_h_entry=False) }}
                 </div>

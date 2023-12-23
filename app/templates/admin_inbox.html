@@ -1,6 +1,7 @@
 {%- import "utils.html" as utils with context -%}
-{%- import "components/pagination.html" as pagination -%}
+{%- import "components/actor.html" as actor -%}
 {%- import "components/filters.html" as filters -%}
+{%- import "components/pagination.html" as pagination -%}
 {% extends "layout.html" %}
 
 {% block head %}
@@ -23,7 +24,7 @@
 {% for inbox_object in inbox %}
 {% if inbox_object.ap_type == "Announce" %}
     <div class="h-entry" id="{{ inbox_object.permalink_id }}">
-        {{ utils.actor_action(inbox_object, "shared", with_icon=True) }}
+        {{ actor.actor_action(url_for("admin_profile"), inbox_object, "shared", with_icon=True) }}
         <div class="h-cite u-repost-of">
             {{ utils.display_object(inbox_object.relates_to_anybox_object, is_h_entry=False) }}
         </div>
@@ -32,12 +33,12 @@
     {{ utils.display_object(inbox_object) }}
 {% elif inbox_object.ap_type == "Follow" %}
     <div class="h-entry" id="{{ inbox_object.permalink_id }}">
-        {{ utils.actor_action(inbox_object, "followed you") }}
+        {{ actor.actor_action(url_for("admin_profile"), inbox_object, "followed you") }}
         {{ utils.display_actor(inbox_object.actor, actors_metadata, embedded=True) }}
     </div>
 {% elif inbox_object.ap_type == "Like" %}
     <div class="h-entry" id="{{ inbox_object.permalink_id }}">
-        {{ utils.actor_action(inbox_object, "liked one of your posts", with_icon=True) }}
+        {{ actor.actor_action(url_for("admin_profile"), inbox_object, "liked one of your posts", with_icon=True) }}
         <div class="h-cite u-repost-of">
           {{ utils.display_object(inbox_object.relates_to_anybox_object, is_h_entry=False) }}
         </div>
