@@ -1,4 +1,5 @@
 {%- import "components/pagination.html" as pagination -%}
+{%- import "components/filters.html" as filters -%}
 {%- import "utils.html" as utils with context -%}
 
 {% extends "layout.html" %}
@@ -10,7 +11,7 @@
 
 {% block content %}
 
-{{ utils.display_box_filters("admin_outbox") }}
+{{ filters.filters(url_for("admin_outbox"), request.query_params.filter_by) }}
 
 {% for outbox_object in outbox %}
 
