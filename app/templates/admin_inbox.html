@@ -1,5 +1,6 @@
 {%- import "utils.html" as utils with context -%}
 {%- import "components/pagination.html" as pagination -%}
+{%- import "components/filters.html" as filters -%}
 {% extends "layout.html" %}
 
 {% block head %}
@@ -10,7 +11,7 @@
 {% block content %}
 
 {% if show_filters %}
-    {{ utils.display_box_filters("admin_inbox") }}
+    {{ filters.filters(url_for("admin_inbox"), request.query_params.filter_by) }}
 {% endif %}
 
 {% if not inbox %}
