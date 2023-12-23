@@ -1,4 +1,6 @@
+{%- import "components/pagination.html" as pagination -%}
 {%- import "utils.html" as utils with context -%}
+
 {% extends "layout.html" %}
 
 {% block head %}
@@ -37,10 +39,6 @@
 
 {% endfor %}
 
-{% if next_cursor %}
-<div class="box">
-    <p><a href="{{ url_for("admin_outbox") }}?cursor={{ next_cursor }}{% if request.query_params.filter_by %}&filter_by={{ request.query_params.filter_by }}{% endif %}">See more</a></p>
-</div>
-{% endif %}
+{{ pagination.pagination(url_for("admin_outbox"), next_cursor, request.query_params.filter_by) }}
 
 {% endblock %}
