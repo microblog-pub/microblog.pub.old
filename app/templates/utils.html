@@ -247,24 +247,6 @@
 {% endblock %}
 {% endmacro %}
 
-{% macro display_tiny_actor_icon(actor) %}
-{% block display_tiny_actor_icon scoped %}
-    <img class="tiny-actor-icon" src="{{ actor.resized_icon_url }}" alt="" loading="lazy">
-{% endblock %}
-{% endmacro %}
-
-{% macro actor_action(inbox_object, text, with_icon=False) %}
-{% block actor_action scoped %}
-    <div class="actor-action">
-        <a href="{{ url_for("admin_profile") }}?actor_id={{ inbox_object.actor.ap_id }}">
-            {% if with_icon %}{{ display_tiny_actor_icon(inbox_object.actor) }}{% endif %} {{ inbox_object.actor.display_name | clean_html(inbox_object.actor) | safe }}
-        </a> {{ text }}
-        <span title="{{ inbox_object.ap_published_at.isoformat() }}">{{ inbox_object.ap_published_at | timeago }}</span>
-    </div>
-
-{% endblock %}
-{% endmacro %}
-
 {% macro display_actor(actor, actors_metadata={}, embedded=False, with_details=False, pending_incoming_follow_notif=None) %}
 {% block display_actor scoped %}
 {% set metadata = actors_metadata.get(actor.ap_id) %}
