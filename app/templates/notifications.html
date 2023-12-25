@@ -1,5 +1,5 @@
 {%- import "utils.html" as utils with context -%}
-{%- import "components/actor.html" as actor -%}
+{%- import "components/actor.html" as actor_component -%}
 {%- import "components/pagination.html" as pagination -%}
 {% extends "layout.html" %}
 
@@ -13,55 +13,55 @@
     <div>
         <div class="h-entry"">
             {%- if notif.notification_type.value == "new_follower" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "followed you", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "followed you", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {%- elif notif.notification_type.value == "pending_incoming_follower" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "sent a follow request", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "sent a follow request", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True, pending_incoming_follow_notif=notif) }}
             {% elif notif.notification_type.value == "rejected_follower" %}
             {% elif notif.notification_type.value == "unfollow" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "unfollowed you", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "unfollowed you", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {%- elif notif.notification_type.value == "follow_request_accepted" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "accepted your follow request", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "accepted your follow request", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {%- elif notif.notification_type.value == "follow_request_rejected" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "rejected your follow request", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "rejected your follow request", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {% elif notif.notification_type.value == "blocked" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "blocked you", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "blocked you", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {% elif notif.notification_type.value == "unblocked" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "unblocked you", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "unblocked you", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {% elif notif.notification_type.value == "block" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "was blocked", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "was blocked", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {% elif notif.notification_type.value == "unblock" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "was unblocked", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "was unblocked", new_flag=notif.is_new) }}
                 {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
             {%- elif notif.notification_type.value == "move" and notif.inbox_object %}
                 {# for move notif, the actor is the target and the inbox object the Move activity #}
                 <div class="actor-action">
                     <a href="{{ url_for("admin_profile") }}?actor_id={{ notif.inbox_object.actor.ap_id }}">
-                        {{ actor.tiny_actor_icon(notif.inbox_object.actor) }} {{ notif.inbox_object.actor.display_name | clean_html(notif.inbox_object.actor) | safe }}</a> has moved to
+                        {{ actor_component.tiny_actor_icon(notif.inbox_object.actor) }} {{ notif.inbox_object.actor.display_name | clean_html(notif.inbox_object.actor) | safe }}</a> has moved to
                     <span title="{{ notif.created_at.isoformat() }}">{{ notif.created_at | timeago }}</span>
                 </div>
                 {{ utils.display_actor(notif.actor) }}
             {% elif notif.notification_type.value == "like" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "liked a post", with_icon=True, new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "liked a post", with_icon=True, new_flag=notif.is_new) }}
                 {{ utils.display_object(notif.outbox_object, is_h_entry=False) }}
            {% elif notif.notification_type.value == "undo_like" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "unliked a post", with_icon=True, new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "unliked a post", with_icon=True, new_flag=notif.is_new) }}
                 {{ utils.display_object(notif.outbox_object, is_h_entry=False) }}
             {% elif notif.notification_type.value == "announce" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "shared a post", with_icon=True, new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "shared a post", with_icon=True, new_flag=notif.is_new) }}
                 {{ utils.display_object(notif.outbox_object, is_h_entry=False) }}
            {% elif notif.notification_type.value == "undo_announce" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "unshared a post", with_icon=True, new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "unshared a post", with_icon=True, new_flag=notif.is_new) }}
                 {{ utils.display_object(notif.outbox_object, is_h_entry=False) }}
             {% elif notif.notification_type.value == "mention" %}
-                {{ actor.actor_action(url_for("admin_profile"), notif, "mentioned you", new_flag=notif.is_new) }}
+                {{ actor_component.actor_action(url_for("admin_profile"), notif, "mentioned you", new_flag=notif.is_new) }}
                 {{ utils.display_object(notif.inbox_object, is_h_entry=False) }}
             {% elif notif.notification_type.value == "new_webmention" %}
                 <div class="actor-action" title="{{ notif.created_at.isoformat() }}">
