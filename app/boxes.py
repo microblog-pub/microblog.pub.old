@@ -2678,6 +2678,8 @@ async def get_replies_tree(
                     select(models.InboxObject)
                     .where(
                         models.InboxObject.conversation
+                        == requested_object.conversation or
+                        models.InboxObject.ap_context
                         == requested_object.conversation,
                         models.InboxObject.ap_type.in_(
                             ["Note", "Page", "Article", "Question"]
