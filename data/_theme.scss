@@ -1,3 +1,5 @@
+// TODO: WE need to get back into separating this 
+
 // font definitions
 /* latin */
 @font-face {
@@ -27,18 +29,6 @@
   unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-// override vars for theming here
-$font-stack: 'Open Sans', sans-serif;
-$background: #F3F3F3;
-$light-background: #FFF;
-$text-color: #000;
-$primary-color: #22ADC2;
-$secondary-color: #22ADC2;
-$form-background-color: #FEFEFE;
-$form-text-color: #333;
-$primary-button-text-color: #FFF;
-$nav-button-background-color: #22ADC2;
-$nav-button-text-color: #FFF;
 
 // mixins
 @mixin box-like() {
@@ -184,3 +174,29 @@ div.activity-og-meta {
 div.actor-box {
   overflow: hidden;
 }
+
+// override vars for theming here
+//JOAO
+//$font-stack: 'Open Sans', sans-serif;
+//$background: #F3F3F3;
+//$light-background: #FFF;
+//$text-color: #000;
+//$primary-color: #22ADC2;
+//$secondary-color: #22ADC2;
+//$form-background-color: #FEFEFE;
+//$form-text-color: #333;
+//$primary-button-text-color: #FFF;
+//$nav-button-background-color: #22ADC2;
+//$nav-button-text-color: #FFF;
+
+$font-stack: "Inconsolata", monospace;
+$background: #ffff;
+$light-background: #f8f9fa;
+$text-color: #0d1e2d;
+$primary-color: #1d781d;
+$secondary-color: #781D78;
+$form-background-color: #f8f9fa;
+$form-text-color: #0d1e2d;
+$muted-color: #555; // solarized comment text
+$primary-button-text-color: #f8f9fa;
+$code-highlight-background: #f0f0f0;
