@@ -1,11 +1,8 @@
 {% macro tiny_actor_icon(actor) %}
-{% block tiny_actor_icon scoped %}
     <img class="tiny-actor-icon" src="{{ actor.resized_icon_url }}" alt="" loading="lazy">
-{% endblock %}
 {% endmacro %}
 
 {% macro actor_action(admin_profile_url, inbox_object, text, with_icon=False, new_flag=False) %}
-{% block actor_action scoped %}
 {% set timestamp = inbox_object.ap_published_at %}
 {% if not timestamp %}
   {% set timestamp = inbox_object.created_at %}
@@ -19,5 +16,4 @@
             <span class="new">new</span>
         {% endif %}
     </div>
-{% endblock %}
 {% endmacro %}
