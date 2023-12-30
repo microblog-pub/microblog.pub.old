@@ -8,7 +8,9 @@
 
 {% extends "layout.html" %}
 {% block content %}
-    {{ utils.display_actor(actor, actors_metadata, with_details=True) }}
+    <div class="ap-object">
+      {{ actor_component.display_actor(request, csrf_token, is_admin, actor, actors_metadata, with_details=True) }}
+    </div>
     {% for inbox_object in inbox_objects %}
         {% if inbox_object.ap_type == "Announce" %}
             <div class="h-entry" id="{{ inbox_object.permalink_id }}">

@@ -14,32 +14,32 @@
         <div class="h-entry"">
             {%- if notif.notification_type.value == "new_follower" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "followed you", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {%- elif notif.notification_type.value == "pending_incoming_follower" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "sent a follow request", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True, pending_incoming_follow_notif=notif) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata, pending_incoming_follow_notif=notif) }}
             {% elif notif.notification_type.value == "rejected_follower" %}
             {% elif notif.notification_type.value == "unfollow" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "unfollowed you", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata,) }}
             {%- elif notif.notification_type.value == "follow_request_accepted" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "accepted your follow request", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {%- elif notif.notification_type.value == "follow_request_rejected" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "rejected your follow request", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {% elif notif.notification_type.value == "blocked" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "blocked you", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {% elif notif.notification_type.value == "unblocked" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "unblocked you", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {% elif notif.notification_type.value == "block" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "was blocked", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {% elif notif.notification_type.value == "unblock" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "was unblocked", new_flag=notif.is_new) }}
-                {{ utils.display_actor(notif.actor, actors_metadata, embedded=True) }}
+                {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor, actors_metadata) }}
             {%- elif notif.notification_type.value == "move" and notif.inbox_object %}
                 {# for move notif, the actor is the target and the inbox object the Move activity #}
                 <div class="actor-action">
@@ -47,7 +47,9 @@
                         {{ actor_component.tiny_actor_icon(notif.inbox_object.actor) }} {{ notif.inbox_object.actor.display_name | clean_html(notif.inbox_object.actor) | safe }}</a> has moved to
                     <span title="{{ notif.created_at.isoformat() }}">{{ notif.created_at | timeago }}</span>
                 </div>
-                {{ utils.display_actor(notif.actor) }}
+                <div class="ap_object">
+                  {{ actor_component.display_actor(request, csrf_token, is_admin, notif.actor) }}
+                </div>
             {% elif notif.notification_type.value == "like" %}
                 {{ actor_component.actor_action(url_for("admin_profile"), notif, "liked a post", with_icon=True, new_flag=notif.is_new) }}
                 {{ utils.display_object(notif.outbox_object, is_h_entry=False) }}
