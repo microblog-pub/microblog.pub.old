@@ -34,7 +34,7 @@
 {% elif inbox_object.ap_type == "Follow" %}
     <div class="h-entry" id="{{ inbox_object.permalink_id }}">
         {{ actor_component.actor_action(url_for("admin_profile"), inbox_object, "followed you") }}
-        {{ utils.display_actor(inbox_object.actor, actors_metadata, embedded=True) }}
+        {{ actor_component.display_actor(request, csrf_token, is_admin, inbox_object.actor, actors_metadata) }}
     </div>
 {% elif inbox_object.ap_type == "Like" %}
     <div class="h-entry" id="{{ inbox_object.permalink_id }}">

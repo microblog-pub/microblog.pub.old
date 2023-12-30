@@ -1,5 +1,6 @@
 {%- import "components/pagination.html" as pagination -%}
 {%- import "components/filters.html" as filters -%}
+{%- import "components/actor.html" as actor_component -%}
 {%- import "utils.html" as utils with context -%}
 
 {% extends "layout.html" %}
@@ -32,7 +33,7 @@
     {% elif outbox_object.ap_type == "Follow" %}
         <div class="h-entry" id="{{ outbox_object.permalink_id }}">
             <div class="actor-action">You followed <span title="{{ outbox_object.ap_published_at.isoformat() }}">{{ outbox_object.ap_published_at | timeago }}</span></div>
-            {{ utils.display_actor(outbox_object.relates_to_actor, actors_metadata, embedded=True) }}
+            {{ actor_component.display_actor(request, csrf_token, is_admin, outbox_object.relates_to_actor, actors_metadata) }}
         </div>
     {% elif outbox_object.ap_type in ["Article", "Note", "Video", "Question"] %}
         {{ utils.display_object(outbox_object) }}
