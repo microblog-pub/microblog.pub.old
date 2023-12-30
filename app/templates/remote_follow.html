@@ -1,4 +1,4 @@
-{%- import "utils.html" as utils with context -%}
+{%- import "components/hidden_inputs.html" as hidden_inputs -%}
 {% extends "layout.html" %}
 
 {% block head %}
@@ -18,7 +18,7 @@ me to receive my posts on your home feed.
 </p>
 <p>What's your account?</p>
 <form class="form" action="{{ url_for("post_remote_follow") }}" method="POST">
-    {{ utils.embed_csrf_token() }}
+    {{ hidden_inputs.embed_csrf_token(csrf_token) }}
     <input type="text" name="profile" placeholder="you@instance.tld" autofocus>
     <input type="submit" value="follow">
 </form>
