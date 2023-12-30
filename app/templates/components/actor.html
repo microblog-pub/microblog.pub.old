@@ -20,8 +20,7 @@
     </div>
 {% endmacro %}
 
-{% macro display_actor(request, csrf_token, is_admin, actor, actors_metadata={}, with_details=False, pending_incoming_follow_notif=None) %}
-{% set metadata = actors_metadata.get(actor.ap_id) %}
+{% macro actor_box(actor) %}
 <div class="actor-box h-card p-author">
     <div class="icon-box">
         <img src="{{ actor.resized_icon_url }}" alt="{{ actor.display_name }}'s avatar" class="actor-icon u-photo" loading="lazy">
@@ -31,7 +30,32 @@
         <div class="actor-handle p-name">{{ actor.handle }}</div>
     </a>
 </div>
+{% endmacro %}
 
+{% macro actor_details(actor) %}
+{% if actor.summary %}
+    <div class="p-note">
+        {{ actor.summary | clean_html(actor) | safe }}
+    </div>
+{% endif %}
+
+{% if actor.attachments %}
+<div id="profile-props">
+    {% for prop in actor.attachments %}
+        <dl>
+            {% if prop.type == "PropertyValue" %}
+            <dt class="muted" title="{{ prop.name }}">{{ prop.name }}</dt>
+            <dd>{{ prop.value | clean_html(actor) | safe }}</dd>
+            {% endif %}
+        </dl>
+    {% endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro display_actor(request, csrf_token, is_admin, actor, actors_metadata={}, with_details=False, pending_incoming_follow_notif=None) %}
+{% set metadata = actors_metadata.get(actor.ap_id) %}
+{{ actor_box(actor) }}
 {% if is_admin and metadata %}
 <div>
     <nav class="flexbox actor-metadata">
@@ -107,23 +131,6 @@
 {% endif %}
 
 {% if with_details %}
-    {% if actor.summary %}
-        <div class="p-note">
-            {{ actor.summary | clean_html(actor) | safe }}
-        </div>
-    {% endif %}
-
-    {% if actor.attachments %}
-    <div id="profile-props">
-        {% for prop in actor.attachments %}
-            <dl>
-                {% if prop.type == "PropertyValue" %}
-                <dt class="muted" title="{{ prop.name }}">{{ prop.name }}</dt>
-                <dd>{{ prop.value | clean_html(actor) | safe }}</dd>
-                {% endif %}
-            </dl>
-        {% endfor %}
-    </div>
-    {% endif %}
+{{ actor_details(actor) }}
 {% endif %}
 {% endmacro %}
