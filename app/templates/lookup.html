@@ -37,7 +37,7 @@
     {% endif %}
 
     {% if ap_object and ap_object.ap_type in actor_types %}
-    <div class="app-object">
+    <div class="ap-object">
         {{ actor_component.display_actor(request, csrf_token, is_admin, ap_object, actors_metadata, with_details=True) }}
     </div>
     {% elif ap_object %}
