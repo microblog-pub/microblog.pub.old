@@ -210,8 +210,8 @@ if custom_router := get_custom_router():
 
 # XXX: order matters, the proxy middleware needs to be last
 # Typechecks disabled due to https://github.com/encode/starlette/discussions/2451
-app.add_middleware(CustomMiddleware) # type: ignore
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=config.CONFIG.trusted_hosts) # type: ignore
+app.add_middleware(CustomMiddleware)  # type: ignore
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=config.CONFIG.trusted_hosts)  # type: ignore
 
 logger.configure(extra={"request_id": "no_req_id"})
 logger.remove()
