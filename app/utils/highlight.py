@@ -39,8 +39,11 @@ def highlight(html: str) -> str:
                 lexer = guess_lexer(code_content)
 
             # Replace the code with Pygment output
-            code_content = code_content.replace("&gt;", ">")
-            code_content = code_content.replace("&lt;", "<")
+            code_content = (
+                code_content.replace("&gt;", ">")
+                .replace("&lt;", "<")
+                .replace("&amp;", "&")
+            )
             code.parent.replaceWith(
                 BeautifulSoup(
                     phighlight(code_content, lexer, _FORMATTER), "html5lib"
