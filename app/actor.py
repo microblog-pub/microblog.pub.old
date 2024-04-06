@@ -418,11 +418,11 @@ async def get_actors_metadata(
             is_following=actor.ap_id in following,
             is_follower=actor.ap_id in followers,
             is_follow_request_sent=actor.ap_id in sent_follow_requests,
-            is_follow_request_rejected=bool(
-                sent_follow_requests[actor.ap_id] in rejected_follow_requests
-            )
-            if actor.ap_id in sent_follow_requests
-            else False,
+            is_follow_request_rejected=(
+                bool(sent_follow_requests[actor.ap_id] in rejected_follow_requests)
+                if actor.ap_id in sent_follow_requests
+                else False
+            ),
             outbox_follow_ap_id=sent_follow_requests.get(actor.ap_id),
             inbox_follow_ap_id=followers.get(actor.ap_id),
             moved_to=moved_to,

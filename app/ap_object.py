@@ -119,9 +119,11 @@ class Object:
                 Attachment.parse_obj(
                     {
                         "proxiedUrl": proxied_url,
-                        "resizedUrl": proxied_url + "/740"
-                        if obj.get("mediaType", "").startswith("image")
-                        else None,
+                        "resizedUrl": (
+                            proxied_url + "/740"
+                            if obj.get("mediaType", "").startswith("image")
+                            else None
+                        ),
                         **obj,
                     }
                 )
