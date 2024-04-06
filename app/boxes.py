@@ -1,4 +1,5 @@
 """Actions related to the AP inbox/outbox."""
+
 import datetime
 import uuid
 from collections import defaultdict
@@ -618,7 +619,7 @@ async def send_create(
             context = in_reply_to_object.ap_context
             conversation = in_reply_to_object.ap_context
 
-    for (upload, filename, alt_text) in uploads:
+    for upload, filename, alt_text in uploads:
         attachments.append(upload_to_attachment(upload, filename, alt_text))
 
     to = []
@@ -713,7 +714,7 @@ async def send_create(
             )
             db_session.add(tagged_object)
 
-    for (upload, filename, alt) in uploads:
+    for upload, filename, alt in uploads:
         outbox_object_attachment = models.OutboxObjectAttachment(
             filename=filename,
             alt=alt,
@@ -2405,12 +2406,12 @@ async def save_to_inbox(
         ap_published_at=ap_published_at,
         ap_object=activity_ro.ap_object,
         visibility=activity_ro.visibility,
-        relates_to_inbox_object_id=relates_to_inbox_object.id
-        if relates_to_inbox_object
-        else None,
-        relates_to_outbox_object_id=relates_to_outbox_object.id
-        if relates_to_outbox_object
-        else None,
+        relates_to_inbox_object_id=(
+            relates_to_inbox_object.id if relates_to_inbox_object else None
+        ),
+        relates_to_outbox_object_id=(
+            relates_to_outbox_object.id if relates_to_outbox_object else None
+        ),
         activity_object_ap_id=activity_ro.activity_object_ap_id,
         is_hidden_from_stream=True,
     )

@@ -133,9 +133,9 @@ class CustomMiddleware:
                 headers = MutableHeaders(scope=message)
                 headers["X-Request-ID"] = request_id
                 headers["x-powered-by"] = "microblogpub"
-                headers[
-                    "referrer-policy"
-                ] = "no-referrer, strict-origin-when-cross-origin"
+                headers["referrer-policy"] = (
+                    "no-referrer, strict-origin-when-cross-origin"
+                )
                 headers["x-content-type-options"] = "nosniff"
                 headers["x-xss-protection"] = "1; mode=block"
                 headers["x-frame-options"] = "DENY"

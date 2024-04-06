@@ -107,7 +107,7 @@ async def get_lookup(
             error = ap.FetchErrorTypeEnum.TIMEOUT
         except (ap.ObjectNotFoundError, ap.ObjectIsGoneError):
             error = ap.FetchErrorTypeEnum.NOT_FOUND
-        except (ap.ObjectUnavailableError):
+        except ap.ObjectUnavailableError:
             error = ap.FetchErrorTypeEnum.UNAUHTORIZED
         except Exception:
             logger.exception(f"Failed to lookup {query}")
