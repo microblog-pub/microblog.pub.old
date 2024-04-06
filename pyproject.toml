@@ -47,7 +47,7 @@ mistletoe = "^1.2.1"
 Pebble = "^5.0.2"
 
 [tool.poetry.dev-dependencies]
-black = "^22.3.0"
+black = "^24.3.0"
 flake8 = "^4.0.1"
 mypy = "^1.6.1"
 isort = "^5.10.1"
