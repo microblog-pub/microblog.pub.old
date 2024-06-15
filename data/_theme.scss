@@ -57,6 +57,11 @@ $nav-button-text-color: #FFF;
 body {
   font-size: 13pt !important;
   line-height: 1.7em !important;
+  transition: filter 150ms linear;
+}
+
+body.htmx-request {
+  filter: grayscale(100%) blur(2px);
 }
 
 header#header {
