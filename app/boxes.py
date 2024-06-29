@@ -2669,18 +2669,26 @@ async def get_replies_tree(
     if requested_object.conversation is None:
         tree_nodes = [requested_object]
     else:
+        logger.info(f"Requested conversation: '{requested_object.conversation}'")
+
         allowed_visibility = [ap.VisibilityEnum.PUBLIC, ap.VisibilityEnum.UNLISTED]
         if is_current_user_admin:
             allowed_visibility = list(ap.VisibilityEnum)
+        logger.info(f"Allowed visibility: {allowed_visibility}")
 
         tree_nodes.extend(
             (
                 await db_session.scalars(
                     select(models.InboxObject)
                     .where(
-                        models.InboxObject.conversation == requested_object.conversation
-                        or models.InboxObject.ap_context
-                        == requested_object.conversation,
+                        (
+                            models.InboxObject.conversation
+                            == requested_object.conversation
+                        )
+                        | (
+                            models.InboxObject.ap_context
+                            == requested_object.conversation
+                        ),
                         models.InboxObject.ap_type.in_(
                             ["Note", "Page", "Article", "Question"]
                         ),
@@ -2693,6 +2701,7 @@ async def get_replies_tree(
             .unique()
             .all()
         )
+
         tree_nodes.extend(
             (
                 await db_session.scalars(
@@ -2719,7 +2728,7 @@ async def get_replies_tree(
     nodes_by_in_reply_to = defaultdict(list)
     for node in tree_nodes:
         nodes_by_in_reply_to[node.in_reply_to].append(node)
-    logger.info(nodes_by_in_reply_to)
+    logger.info(f"Nodes in reply to: {nodes_by_in_reply_to}")
 
     if len(nodes_by_in_reply_to.get(None, [])) > 1:
         raise ValueError(f"Invalid replies tree: {[n.ap_object for n in tree_nodes]}")
