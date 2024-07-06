@@ -4,10 +4,11 @@
       <label for="{{attachment.proxied_url}}" class="label-btn show-hide-sensitive-btn">show/hide sensitive content</label>
       <div>
           <div class="sensitive-attachment">
-          <input class="sensitive-attachment-state" type="checkbox" id="{{attachment.proxied_url}}" aria-hidden="true">
-          <div class="sensitive-attachment-box attachment-orientation-{{orientation}}">
-              <div></div>
-              {{ caller() }}
+            <input class="sensitive-attachment-state" type="checkbox" id="{{attachment.proxied_url}}" aria-hidden="true">
+            <div class="sensitive-attachment-box attachment-orientation-{{orientation}}">
+                <div></div>
+                {{ caller() }}
+            </div>
           </div>
       </div>
   </div>
