@@ -25,9 +25,10 @@ As these two config items define your ActivityPub handle `@handle@domain`.
 
 You can tweak your profile by tweaking these items:
 
- - `name`
- - `summary` (using Markdown)
- - `icon_url`
+ - `name`: The name shown with your profile.
+ - `summary`: The summary or 'bio' part of your profile, written in Markdown.
+ - `icon_url`: Your profile image or avatar.
+ - `image_url`: This provides a 'header' or 'banner' image. Note that it is not shown by the default Microblog.pub templates. It will be used by Mastodon (which uses a 3:1 ratio image) and Pleroma. Pixelfed and Peertube, for example, don't show these images by default.
 
 Whenever one of these config items is updated, an `Update` activity will be sent to all known servers to update your remote profile.
 
@@ -35,6 +36,15 @@ The server will need to be restarted for taking changes into account.
 
 Before restarting the server, you can ensure you haven't made any mistakes by running the [configuration checking task](/user_guide.html#configuration-checking).
 
+Note that currently `image_url` is not used anywhere in microblog.pub itself, but other clients/servers do occasionally use it when showing remote profiles as a background image.
+Also, this image _can_ be used in microblog.pub - just add this:
+
+```html
+<img src="{{ local_actor.image_url | media_proxy_url }}">
+```
+
+to an appropriate place of your template (most likely, `header.html`).
+For more information, see a section about [custom templates](/user_guide.html#custom-templates) further in this document.
 
 ### Profile metadata
 
@@ -161,9 +171,34 @@ $secondary-color: #32cd32;
 
 See `app/scss/main.scss` to see what variables can be overridden.
 
+You will need to [recompile CSS](#recompiling-css-files) after doing any CSS changes (for actual css files to be updates) and restart microblog.pub (for css link in HTML documents to be updated with a new checksum - otherwise, browsers that downloaded old CSS will keep using it).
+
+#### Custom favicon
+
+By default, microblog.pub favicon is a square of `$primary-color` CSS color (see above section on how to redefine CSS colors).
+You can change it to any icon you like - just save a desired file as `data/favicon.ico`.
+After that, run the "[recompile CSS](#recompiling-css-files)" task to copy it to `app/static/favicon.ico`.
+
 #### Custom templates
 
 If you'd like to customize your instance's theme beyond CSS, you can modify the app's HTML by placing templates in `data/templates` which overwrite the defaults in `app/templates`.
+
+Templates are written using [Jinja](https://jinja.palletsprojects.com/en/latest/templates/) templating language.
+Moreover, `utils.html` has scoped blocks around the body of every macro.
+This allows macros to be overridden individually in `data/templates/utils.html`, without copying the whole file.
+For example, to only override the display of a specific actor's name/icon, you can create `data/templates/utils.html` file with following content:
+
+```jinja
+{% extends "app/utils.html" %}
+
+{% block display_actor %}
+	{% if actor.ap_id == "https://me.example.com" %}
+		<!-- custom actor display -->
+	{% else %}
+		{{ super() }}
+	{% endif %}
+{% endblock %}
+```
 
 #### Custom Content Security Policy (CSP)
 
@@ -320,7 +355,7 @@ First you need to grab the "ActivityPub actor URL" for your existing account:
 
 ```bash
 # For a Python install
-poetry run inv webfinger username@domain.tld
+poetry run inv webfinger username@instance-you-want-to-move-from.tld
 ```
 
 Edit the config.
@@ -329,7 +364,7 @@ Edit the config.
 
 ```bash
 # For a Docker install
-make account=username@domain.tld webfinger
+make account=username@instance-you-want-to-move-from.tld webfinger
 ```
 
 Edit the config.
@@ -339,10 +374,34 @@ Edit the config.
 And add a reference to your old/existing account in `profile.toml`:
 
 ```toml
-also_known_as = "my@old-account.com"
+also_known_as = "https://instance-you-want-to-move-form.tld/users/username"
 ```
 
 Restart the server, and you should be able to complete the move from your existing account.
+
+Note that if you already have a redirect in place on Mastodon, you may have to remove it before initiating the migration.
+
+## Import follows from Mastodon
+
+You can import the list of follows/following accounts from Mastodon.
+
+It requires downloading the "Follows" CSV file from your Mastodon instance via "Settings" / "Import and export" / "Data export".
+
+Then you need to run the import task:
+
+### Python edition
+
+```bash
+# For a Python install
+poetry run inv import-mastodon-following-accounts following_accounts.csv
+```
+
+### Docker edition
+
+```bash
+# For a Docker install
+make path=following_accounts.csv import-mastodon-following-accounts
+```
 
 ## Tasks
 

@@ -44,11 +44,14 @@ except FileNotFoundError:
 JS_HASH = "none"
 try:
     # To keep things simple, we keep a single hash for the 2 files
-    js_data_common = (ROOT_DIR / "app" / "static" / "common-admin.js").read_bytes()
-    js_data_new = (ROOT_DIR / "app" / "static" / "new.js").read_bytes()
-    JS_HASH = hashlib.md5(
-        js_data_common + js_data_new, usedforsecurity=False
-    ).hexdigest()
+    dat = b""
+    for j in [
+        ROOT_DIR / "app" / "static" / "common.js",
+        ROOT_DIR / "app" / "static" / "common-admin.js",
+        ROOT_DIR / "app" / "static" / "new.js",
+    ]:
+        dat += j.read_bytes()
+    JS_HASH = hashlib.md5(dat, usedforsecurity=False).hexdigest()
 except FileNotFoundError:
     pass
 
@@ -101,7 +104,7 @@ class Config(pydantic.BaseModel):
     manually_approves_followers: bool = False
     privacy_replace: list[_PrivacyReplace] | None = None
     metadata: list[_ProfileMetadata] | None = None
-    code_highlighting_theme = "friendly_grayscale"
+    code_highlighting_theme: str = "friendly_grayscale"
     blocked_servers: list[_BlockedServer] = []
     custom_footer: str | None = None
     emoji: str | None = None
@@ -114,11 +117,14 @@ class Config(pydantic.BaseModel):
 
     custom_content_security_policy: str | None = None
 
+    webfinger_domain: str | None = None
+
     # Config items to make tests easier
     sqlalchemy_database: str | None = None
     key_path: str | None = None
 
     session_timeout: int = 3600 * 24 * 3  # in seconds, 3 days by default
+    csrf_token_exp: int = 3600
 
     disabled_notifications: list[str] = []
 
@@ -165,6 +171,10 @@ ID = f"{_SCHEME}://{DOMAIN}"
 if CONFIG.id:
     ID = CONFIG.id
 USERNAME = CONFIG.username
+
+# Allow to use @handle@webfinger-domain.tld while hosting the server at domain.tld
+WEBFINGER_DOMAIN = CONFIG.webfinger_domain or DOMAIN
+
 MANUALLY_APPROVES_FOLLOWERS = CONFIG.manually_approves_followers
 HIDES_FOLLOWERS = CONFIG.hides_followers
 HIDES_FOLLOWING = CONFIG.hides_following
@@ -254,7 +264,7 @@ def verify_csrf_token(
     if redirect_url:
         please_try_again = f'<a href="{redirect_url}">please try again</a>'
     try:
-        csrf_serializer.loads(csrf_token, max_age=1800)
+        csrf_serializer.loads(csrf_token, max_age=CONFIG.csrf_token_exp)
     except (itsdangerous.BadData, itsdangerous.SignatureExpired):
         logger.exception("Failed to verify CSRF token")
         raise HTTPException(

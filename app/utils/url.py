@@ -21,6 +21,13 @@ def make_abs(url: str | None, parent: str) -> str | None:
     )
 
 
+def must_make_abs(url: str | None, parent: str) -> str:
+    abs_url = make_abs(url, parent)
+    if not abs_url:
+        raise ValueError("missing URL")
+    return abs_url
+
+
 class InvalidURLError(Exception):
     pass
 
@@ -54,7 +61,7 @@ def is_url_valid(url: str) -> bool:
     if not parsed.hostname or parsed.hostname.lower() in ["localhost"]:
         return False
 
-    if parsed.hostname in BLOCKED_SERVERS:
+    if is_hostname_blocked(parsed.hostname):
         logger.warning(f"{parsed.hostname} is blocked")
         return False
 
@@ -81,3 +88,11 @@ def check_url(url: str) -> None:
         raise InvalidURLError(f'"{url}" is invalid')
 
     return None
+
+
+@functools.lru_cache(maxsize=256)
+def is_hostname_blocked(hostname: str) -> bool:
+    for blocked_hostname in BLOCKED_SERVERS:
+        if hostname == blocked_hostname or hostname.endswith(f".{blocked_hostname}"):
+            return True
+    return False

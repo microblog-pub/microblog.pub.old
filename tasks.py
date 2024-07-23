@@ -2,15 +2,47 @@ import asyncio
 import io
 import shutil
 import tarfile
+from collections import namedtuple
 from contextlib import contextmanager
+from inspect import getfullargspec
 from pathlib import Path
 from typing import Generator
 from typing import Optional
+from unittest.mock import patch
 
 import httpx
+import invoke  # type: ignore
 from invoke import Context  # type: ignore
 from invoke import run  # type: ignore
 from invoke import task  # type: ignore
+
+
+def fix_annotations():
+    """
+    Pyinvoke doesn't accept annotations by default, this fix that
+    Based on: @zelo's fix in https://github.com/pyinvoke/invoke/pull/606
+    Context in: https://github.com/pyinvoke/invoke/issues/357
+        Python 3.11 https://github.com/pyinvoke/invoke/issues/833
+    """
+
+    ArgSpec = namedtuple("ArgSpec", ["args", "defaults"])
+
+    def patched_inspect_getargspec(func):
+        spec = getfullargspec(func)
+        return ArgSpec(spec.args, spec.defaults)
+
+    org_task_argspec = invoke.tasks.Task.argspec
+
+    def patched_task_argspec(*args, **kwargs):
+        with patch(
+            target="inspect.getargspec", new=patched_inspect_getargspec, create=True
+        ):
+            return org_task_argspec(*args, **kwargs)
+
+    invoke.tasks.Task.argspec = patched_task_argspec
+
+
+fix_annotations()
 
 
 @task
@@ -29,14 +61,14 @@ def migrate_db(ctx):
 def autoformat(ctx):
     # type: (Context) -> None
     run("black .", echo=True)
-    run("isort -sl .", echo=True)
+    run("isort --sl .", echo=True)
 
 
 @task
 def lint(ctx):
     # type: (Context) -> None
     run("black --check .", echo=True)
-    run("isort -sl --check-only .", echo=True)
+    run("isort --sl --check-only .", echo=True)
     run("flake8 .", echo=True)
     run("mypy .", echo=True)
 
@@ -353,3 +385,40 @@ def check_config(ctx):
         sys.exit(1)
     else:
         print("Config is OK")
+
+
+@task
+def import_mastodon_following_accounts(ctx, path):
+    # type: (Context, str) -> None
+    from loguru import logger
+
+    from app.boxes import _get_following
+    from app.boxes import _send_follow
+    from app.database import async_session
+    from app.utils.mastodon import get_actor_urls_from_following_accounts_csv_file
+
+    async def _import_following() -> int:
+        count = 0
+        async with async_session() as db_session:
+            followings = {
+                following.ap_actor_id for following in await _get_following(db_session)
+            }
+            for (
+                handle,
+                actor_url,
+            ) in await get_actor_urls_from_following_accounts_csv_file(path):
+                if actor_url in followings:
+                    logger.info(f"Already following {handle}")
+                    continue
+
+                logger.info(f"Importing {actor_url=}")
+
+                await _send_follow(db_session, actor_url)
+                count += 1
+
+            await db_session.commit()
+
+        return count
+
+    count = asyncio.run(_import_following())
+    logger.info(f"Import done, {count} follow requests sent")

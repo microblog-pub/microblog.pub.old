@@ -1,4 +1,5 @@
 from datetime import datetime
+from urllib.parse import quote
 
 import httpx
 from fastapi import APIRouter
@@ -24,6 +25,7 @@ from app import templates
 from app.actor import LOCAL_ACTOR
 from app.actor import fetch_actor
 from app.actor import get_actors_metadata
+from app.actor import list_actors
 from app.boxes import get_inbox_object_by_ap_id
 from app.boxes import get_outbox_object_by_ap_id
 from app.boxes import send_block
@@ -51,15 +53,18 @@ async def user_session_or_redirect(
     if request.method == "POST":
         form_data = await request.form()
         if "redirect_url" in form_data:
-            redirect_url = form_data["redirect_url"]
+            redirect_url = str(form_data["redirect_url"])
         else:
-            redirect_url = request.url_for("admin_stream")
+            redirect_url = str(request.url_for("admin_stream"))
     else:
         redirect_url = str(request.url)
 
     _RedirectToLoginPage = HTTPException(
         status_code=302,
-        headers={"Location": request.url_for("login") + f"?redirect={redirect_url}"},
+        headers={
+            "Location": str(request.url_for("login"))
+            + f"?redirect={quote(redirect_url)}"
+        },
     )
 
     if not session:
@@ -85,7 +90,7 @@ router = APIRouter(
 unauthenticated_router = APIRouter()
 
 
-@router.get("/lookup")
+@router.get("/lookup", response_model=None)
 async def get_lookup(
     request: Request,
     query: str | None = None,
@@ -94,6 +99,7 @@ async def get_lookup(
     error = None
     ap_object = None
     actors_metadata = {}
+    actor_recommendations = await list_actors(db_session, 2500)
     if query:
         try:
             ap_object = await lookup(db_session, query)
@@ -101,7 +107,7 @@ async def get_lookup(
             error = ap.FetchErrorTypeEnum.TIMEOUT
         except (ap.ObjectNotFoundError, ap.ObjectIsGoneError):
             error = ap.FetchErrorTypeEnum.NOT_FOUND
-        except (ap.ObjectUnavailableError):
+        except ap.ObjectUnavailableError:
             error = ap.FetchErrorTypeEnum.UNAUHTORIZED
         except Exception:
             logger.exception(f"Failed to lookup {query}")
@@ -116,7 +122,7 @@ async def get_lookup(
                     pass
                 else:
                     return RedirectResponse(
-                        request.url_for("admin_profile")
+                        str(request.url_for("admin_profile"))
                         + f"?actor_id={ap_object.ap_id}",
                         status_code=302,
                     )
@@ -131,7 +137,7 @@ async def get_lookup(
                 )
                 if requested_object:
                     return RedirectResponse(
-                        request.url_for("admin_object")
+                        str(request.url_for("admin_object"))
                         + f"?ap_id={ap_object.ap_id}#"
                         + requested_object.permalink_id,
                         status_code=302,
@@ -149,12 +155,13 @@ async def get_lookup(
             "query": query,
             "ap_object": ap_object,
             "actors_metadata": actors_metadata,
+            "actor_recommendations": actor_recommendations,
             "error": error,
         },
     )
 
 
-@router.get("/new")
+@router.get("/new", response_model=None)
 async def admin_new(
     request: Request,
     query: str | None = None,
@@ -186,8 +193,11 @@ async def admin_new(
             content += f"{in_reply_to_object.actor.handle} "
         for tag in in_reply_to_object.tags:
             if tag.get("type") == "Mention" and tag["name"] != LOCAL_ACTOR.handle:
-                mentioned_actor = await fetch_actor(db_session, tag["href"])
-                content += f"{mentioned_actor.handle} "
+                try:
+                    mentioned_actor = await fetch_actor(db_session, tag["href"])
+                    content += f"{mentioned_actor.handle} "
+                except Exception:
+                    logger.exception(f"Failed to lookup {mentioned_actor}")
 
         # Copy the content warning if any
         if in_reply_to_object.summary:
@@ -217,7 +227,7 @@ async def admin_new(
     )
 
 
-@router.get("/bookmarks")
+@router.get("/bookmarks", response_model=None)
 async def admin_bookmarks(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -260,7 +270,7 @@ async def admin_bookmarks(
     )
 
 
-@router.get("/stream")
+@router.get("/stream", response_model=None)
 async def admin_stream(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -331,7 +341,7 @@ async def admin_stream(
     )
 
 
-@router.get("/inbox")
+@router.get("/inbox", response_model=None)
 async def admin_inbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -419,7 +429,7 @@ async def admin_inbox(
     )
 
 
-@router.get("/direct_messages")
+@router.get("/direct_messages", response_model=None)
 async def admin_direct_messages(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -607,7 +617,7 @@ async def admin_direct_messages(
     )
 
 
-@router.get("/outbox")
+@router.get("/outbox", response_model=None)
 async def admin_outbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -680,7 +690,7 @@ async def admin_outbox(
     )
 
 
-@router.get("/notifications")
+@router.get("/notifications", response_model=None)
 async def get_notifications(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -760,7 +770,7 @@ async def get_notifications(
     return tpl_resp
 
 
-@router.get("/object")
+@router.get("/object", response_model=None)
 async def admin_object(
     request: Request,
     ap_id: str,
@@ -784,7 +794,7 @@ async def admin_object(
     )
 
 
-@router.get("/profile")
+@router.get("/profile", response_model=None)
 async def admin_profile(
     request: Request,
     actor_id: str,
@@ -861,7 +871,7 @@ async def admin_profile(
     )
 
 
-@router.post("/actions/force_delete")
+@router.post("/actions/force_delete", response_model=None)
 async def admin_actions_force_delete(
     request: Request,
     ap_object_id: str = Form(),
@@ -885,7 +895,7 @@ async def admin_actions_force_delete(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/force_delete_webmention")
+@router.post("/actions/force_delete_webmention", response_model=None)
 async def admin_actions_force_delete_webmention(
     request: Request,
     webmention_id: int = Form(),
@@ -921,7 +931,7 @@ async def admin_actions_force_delete_webmention(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/follow")
+@router.post("/actions/follow", response_model=None)
 async def admin_actions_follow(
     request: Request,
     ap_actor_id: str = Form(),
@@ -934,7 +944,7 @@ async def admin_actions_follow(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/block")
+@router.post("/actions/block", response_model=None)
 async def admin_actions_block(
     request: Request,
     ap_actor_id: str = Form(),
@@ -946,7 +956,7 @@ async def admin_actions_block(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/unblock")
+@router.post("/actions/unblock", response_model=None)
 async def admin_actions_unblock(
     request: Request,
     ap_actor_id: str = Form(),
@@ -959,7 +969,35 @@ async def admin_actions_unblock(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/delete")
+@router.post("/actions/hide_announces", response_model=None)
+async def admin_actions_hide_announces(
+    request: Request,
+    ap_actor_id: str = Form(),
+    redirect_url: str = Form(),
+    csrf_check: None = Depends(verify_csrf_token),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> RedirectResponse:
+    actor = await fetch_actor(db_session, ap_actor_id)
+    actor.are_announces_hidden_from_stream = True
+    await db_session.commit()
+    return RedirectResponse(redirect_url, status_code=302)
+
+
+@router.post("/actions/show_announces", response_model=None)
+async def admin_actions_show_announces(
+    request: Request,
+    ap_actor_id: str = Form(),
+    redirect_url: str = Form(),
+    csrf_check: None = Depends(verify_csrf_token),
+    db_session: AsyncSession = Depends(get_db_session),
+) -> RedirectResponse:
+    actor = await fetch_actor(db_session, ap_actor_id)
+    actor.are_announces_hidden_from_stream = False
+    await db_session.commit()
+    return RedirectResponse(redirect_url, status_code=302)
+
+
+@router.post("/actions/delete", response_model=None)
 async def admin_actions_delete(
     request: Request,
     ap_object_id: str = Form(),
@@ -971,7 +1009,7 @@ async def admin_actions_delete(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/accept_incoming_follow")
+@router.post("/actions/accept_incoming_follow", response_model=None)
 async def admin_actions_accept_incoming_follow(
     request: Request,
     notification_id: int = Form(),
@@ -983,7 +1021,7 @@ async def admin_actions_accept_incoming_follow(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/reject_incoming_follow")
+@router.post("/actions/reject_incoming_follow", response_model=None)
 async def admin_actions_reject_incoming_follow(
     request: Request,
     notification_id: int = Form(),
@@ -995,7 +1033,7 @@ async def admin_actions_reject_incoming_follow(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/like")
+@router.post("/actions/like", response_model=None)
 async def admin_actions_like(
     request: Request,
     ap_object_id: str = Form(),
@@ -1007,7 +1045,7 @@ async def admin_actions_like(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/undo")
+@router.post("/actions/undo", response_model=None)
 async def admin_actions_undo(
     request: Request,
     ap_object_id: str = Form(),
@@ -1019,7 +1057,7 @@ async def admin_actions_undo(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/announce")
+@router.post("/actions/announce", response_model=None)
 async def admin_actions_announce(
     request: Request,
     ap_object_id: str = Form(),
@@ -1031,7 +1069,7 @@ async def admin_actions_announce(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/bookmark")
+@router.post("/actions/bookmark", response_model=None)
 async def admin_actions_bookmark(
     request: Request,
     ap_object_id: str = Form(),
@@ -1049,7 +1087,7 @@ async def admin_actions_bookmark(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/unbookmark")
+@router.post("/actions/unbookmark", response_model=None)
 async def admin_actions_unbookmark(
     request: Request,
     ap_object_id: str = Form(),
@@ -1065,7 +1103,7 @@ async def admin_actions_unbookmark(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/pin")
+@router.post("/actions/pin", response_model=None)
 async def admin_actions_pin(
     request: Request,
     ap_object_id: str = Form(),
@@ -1081,7 +1119,7 @@ async def admin_actions_pin(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/unpin")
+@router.post("/actions/unpin", response_model=None)
 async def admin_actions_unpin(
     request: Request,
     ap_object_id: str = Form(),
@@ -1097,7 +1135,7 @@ async def admin_actions_unpin(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.post("/actions/new")
+@router.post("/actions/new", response_model=None)
 async def admin_actions_new(
     request: Request,
     files: list[UploadFile] = [],
@@ -1123,15 +1161,28 @@ async def admin_actions_new(
         content_warning = None
 
     if not content:
-        raise HTTPException(status_code=422, detail="Error: objec must have a content")
+        raise HTTPException(status_code=422, detail="Error: object must have a content")
 
     # XXX: for some reason, no files restuls in an empty single file
     uploads = []
     raw_form_data = await request.form()
-    if len(files) >= 1 and files[0].filename:
+    if len(files) >= 1:
         for f in files:
-            upload = await save_upload(db_session, f)
-            uploads.append((upload, f.filename, raw_form_data.get("alt_" + f.filename)))
+            if f.filename is not None and f.filename != "":
+                upload = await save_upload(db_session, f)
+                if upload is not None:
+                    alt = raw_form_data.get("alt_" + f.filename)
+                    uploads.append(
+                        (
+                            upload,
+                            f.filename,
+                            str(alt) if alt is not None else None,
+                        )
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=422, detail="Error: Unable to process upload"
+                    )
 
     ap_type = "Note"
 
@@ -1142,16 +1193,16 @@ async def admin_actions_new(
         poll_answers = []
         for i in ["1", "2", "3", "4"]:
             if answer := raw_form_data.get(f"poll_answer_{i}"):
-                poll_answers.append(answer)
+                poll_answers.append(str(answer))
 
         if not poll_answers or len(poll_answers) < 2:
             raise ValueError("Question must have at least 2 answers")
 
-        poll_duration_in_minutes = int(raw_form_data["poll_duration"])
+        poll_duration_in_minutes = int(str(raw_form_data["poll_duration"]))
     elif name:
         ap_type = "Article"
 
-    public_id = await boxes.send_create(
+    public_id, _ = await boxes.send_create(
         db_session,
         ap_type=ap_type,
         source=content,
@@ -1171,7 +1222,7 @@ async def admin_actions_new(
     )
 
 
-@router.post("/actions/vote")
+@router.post("/actions/vote", response_model=None)
 async def admin_actions_vote(
     request: Request,
     redirect_url: str = Form(),
@@ -1180,7 +1231,7 @@ async def admin_actions_vote(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> RedirectResponse:
     form_data = await request.form()
-    names = form_data.getlist("name")
+    names = list(map(lambda data: str(data), form_data.getlist("name")))
     logger.info(f"{names=}")
     await boxes.send_vote(
         db_session,
@@ -1190,7 +1241,7 @@ async def admin_actions_vote(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@unauthenticated_router.get("/login")
+@unauthenticated_router.get("/login", response_model=None)
 async def login(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1209,7 +1260,7 @@ async def login(
     )
 
 
-@unauthenticated_router.post("/login")
+@unauthenticated_router.post("/login", response_model=None)
 async def login_validation(
     request: Request,
     password: str = Form(),
@@ -1239,7 +1290,7 @@ async def login_validation(
     return resp
 
 
-@router.get("/logout")
+@router.get("/logout", response_model=None)
 async def logout(
     request: Request,
 ) -> RedirectResponse:

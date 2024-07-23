@@ -62,6 +62,7 @@ from app.config import DOMAIN
 from app.config import ID
 from app.config import USER_AGENT
 from app.config import USERNAME
+from app.config import WEBFINGER_DOMAIN
 from app.config import is_activitypub_requested
 from app.config import verify_csrf_token
 from app.customization import get_custom_router
@@ -80,8 +81,8 @@ from app.utils.highlight import HIGHLIGHT_CSS_HASH
 from app.utils.url import check_url
 from app.webfinger import get_remote_follow_template
 
-# Only images <1MB will be cached, so 64MB of data will be cached
-_RESIZED_CACHE: MutableMapping[tuple[str, int], tuple[bytes, str, Any]] = LFUCache(64)
+# Only images <1MB will be cached, so 32MB of data will be cached
+_RESIZED_CACHE: MutableMapping[tuple[str, int], tuple[bytes, str, Any]] = LFUCache(32)
 
 
 # TODO(ts):
@@ -132,9 +133,9 @@ class CustomMiddleware:
                 headers = MutableHeaders(scope=message)
                 headers["X-Request-ID"] = request_id
                 headers["x-powered-by"] = "microblogpub"
-                headers[
-                    "referrer-policy"
-                ] = "no-referrer, strict-origin-when-cross-origin"
+                headers["referrer-policy"] = (
+                    "no-referrer, strict-origin-when-cross-origin"
+                )
                 headers["x-content-type-options"] = "nosniff"
                 headers["x-xss-protection"] = "1; mode=block"
                 headers["x-frame-options"] = "DENY"
@@ -208,8 +209,9 @@ if custom_router := get_custom_router():
     app.include_router(custom_router)
 
 # XXX: order matters, the proxy middleware needs to be last
-app.add_middleware(CustomMiddleware)
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=config.CONFIG.trusted_hosts)
+# Typechecks disabled due to https://github.com/encode/starlette/discussions/2451
+app.add_middleware(CustomMiddleware)  # type: ignore
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=config.CONFIG.trusted_hosts)  # type: ignore
 
 logger.configure(extra={"request_id": "no_req_id"})
 logger.remove()
@@ -226,7 +228,7 @@ logger.add(sys.stdout, format=logger_format, level="DEBUG" if DEBUG else "INFO")
 async def custom_http_exception_handler(
     request: Request,
     exc: StarletteHTTPException,
-) -> templates.TemplateResponse | JSONResponse:
+) -> templates.TemplateResponse | JSONResponse | Response:
     accept_value = request.headers.get("accept")
     if (
         accept_value
@@ -281,7 +283,7 @@ async def redirect_to_remote_instance(
     )
 
 
-@app.get(config.NavBarItems.NOTES_PATH)
+@app.get(config.NavBarItems.NOTES_PATH, response_model=None)
 async def index(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -340,7 +342,7 @@ async def index(
     )
 
 
-@app.get("/articles")
+@app.get("/articles", response_model=None)
 async def articles(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -454,7 +456,7 @@ async def _empty_followx_collection(
     }
 
 
-@app.get("/followers")
+@app.get("/followers", response_model=None)
 async def followers(
     request: Request,
     page: bool | None = None,
@@ -464,7 +466,12 @@ async def followers(
     _: httpsig.HTTPSigInfo = Depends(httpsig.httpsig_checker),
 ) -> ActivityPubResponse | templates.TemplateResponse:
     if is_activitypub_requested(request):
-        if config.HIDES_FOLLOWERS:
+        maybe_access_token_info = await indieauth.check_access_token(
+            request,
+            db_session,
+        )
+
+        if config.HIDES_FOLLOWERS and not maybe_access_token_info:
             return ActivityPubResponse(
                 await _empty_followx_collection(
                     db_session=db_session,
@@ -486,12 +493,12 @@ async def followers(
     if config.HIDES_FOLLOWERS and not is_current_user_admin(request):
         raise HTTPException(status_code=404)
 
-    # We only show the most recent 20 followers on the public website
+    # We only show the most recent 100 followers on the public website
     followers_result = await db_session.scalars(
         select(models.Follower)
         .options(joinedload(models.Follower.actor))
         .order_by(models.Follower.created_at.desc())
-        .limit(20)
+        .limit(100)
     )
     followers = followers_result.unique().all()
 
@@ -506,14 +513,11 @@ async def followers(
         db_session,
         request,
         "followers.html",
-        {
-            "followers": followers,
-            "actors_metadata": actors_metadata,
-        },
+        {"followers": followers, "actors_metadata": actors_metadata},
     )
 
 
-@app.get("/following")
+@app.get("/following", response_model=None)
 async def following(
     request: Request,
     page: bool | None = None,
@@ -523,7 +527,12 @@ async def following(
     _: httpsig.HTTPSigInfo = Depends(httpsig.httpsig_checker),
 ) -> ActivityPubResponse | templates.TemplateResponse:
     if is_activitypub_requested(request):
-        if config.HIDES_FOLLOWING:
+        maybe_access_token_info = await indieauth.check_access_token(
+            request,
+            db_session,
+        )
+
+        if config.HIDES_FOLLOWING and not maybe_access_token_info:
             return ActivityPubResponse(
                 await _empty_followx_collection(
                     db_session=db_session,
@@ -545,14 +554,14 @@ async def following(
     if config.HIDES_FOLLOWING and not is_current_user_admin(request):
         raise HTTPException(status_code=404)
 
-    # We only show the most recent 20 follows on the public website
+    # We only show the most recent 100 follows on the public website
     following = (
         (
             await db_session.scalars(
                 select(models.Following)
                 .options(joinedload(models.Following.actor))
                 .order_by(models.Following.created_at.desc())
-                .limit(20)
+                .limit(100)
             )
         )
         .unique()
@@ -577,24 +586,36 @@ async def following(
     )
 
 
-@app.get("/outbox")
+@app.get("/outbox", response_model=None)
 async def outbox(
+    request: Request,
     db_session: AsyncSession = Depends(get_db_session),
     _: httpsig.HTTPSigInfo = Depends(httpsig.httpsig_checker),
 ) -> ActivityPubResponse:
+    maybe_access_token_info = await indieauth.check_access_token(
+        request,
+        db_session,
+    )
+
+    # Default restrictions unless the request is authenticated with an access token
+    restricted_where = [
+        models.OutboxObject.visibility == ap.VisibilityEnum.PUBLIC,
+        models.OutboxObject.ap_type.in_(["Create", "Note", "Article", "Announce"]),
+    ]
+
     # By design, we only show the last 20 public activities in the oubox
     outbox_objects = (
         await db_session.scalars(
             select(models.OutboxObject)
             .where(
-                models.OutboxObject.visibility == ap.VisibilityEnum.PUBLIC,
                 models.OutboxObject.is_deleted.is_(False),
-                models.OutboxObject.ap_type.in_(["Create", "Announce"]),
+                *([] if maybe_access_token_info else restricted_where),
             )
             .order_by(models.OutboxObject.ap_published_at.desc())
             .limit(20)
         )
     ).all()
+
     return ActivityPubResponse(
         {
             "@context": ap.AS_EXTENDED_CTX,
@@ -609,7 +630,50 @@ async def outbox(
     )
 
 
-@app.get("/featured")
+@app.post("/outbox", response_model=None)
+async def post_outbox(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+    access_token_info: indieauth.AccessTokenInfo = Depends(
+        indieauth.enforce_access_token
+    ),
+) -> ActivityPubResponse:
+    payload = await request.json()
+    logger.info(f"{payload=}")
+
+    if payload.get("type") == "Create":
+        assert payload["actor"] == ID
+        obj = payload["object"]
+
+        to_and_cc = obj.get("to", []) + obj.get("cc", [])
+        if ap.AS_PUBLIC in obj.get("to", []) and ID + "/followers" in to_and_cc:
+            visibility = ap.VisibilityEnum.PUBLIC
+        elif ap.AS_PUBLIC in to_and_cc and ID + "/followers" in to_and_cc:
+            visibility = ap.VisibilityEnum.UNLISTED
+        else:
+            visibility = ap.VisibilityEnum.DIRECT
+
+        object_id, outbox_object = await boxes.send_create(
+            db_session,
+            ap_type=obj["type"],
+            source=obj["content"],
+            uploads=[],
+            in_reply_to=obj.get("inReplyTo"),
+            visibility=visibility,
+            content_warning=obj.get("summary"),
+            is_sensitive=obj.get("sensitive", False),
+        )
+    else:
+        raise ValueError("TODO")
+
+    return ActivityPubResponse(
+        outbox_object.ap_object,
+        status_code=201,
+        headers={"Location": boxes.outbox_object_id(object_id)},
+    )
+
+
+@app.get("/featured", response_model=None)
 async def featured(
     db_session: AsyncSession = Depends(get_db_session),
     _: httpsig.HTTPSigInfo = Depends(httpsig.httpsig_checker),
@@ -644,6 +708,14 @@ async def _check_outbox_object_acl(
     httpsig_info: httpsig.HTTPSigInfo,
 ) -> None:
     if templates.is_current_user_admin(request):
+        return None
+
+    maybe_access_token_info = await indieauth.check_access_token(
+        request,
+        db_session,
+    )
+    if maybe_access_token_info:
+        # TODO: check scopes
         return None
 
     if ap_object.visibility in [
@@ -731,7 +803,7 @@ async def _fetch_webmentions(
     ).all()
 
 
-@app.get("/o/{public_id}")
+@app.get("/o/{public_id}", response_model=None)
 async def outbox_by_public_id(
     public_id: str,
     request: Request,
@@ -860,7 +932,7 @@ def _merge_replies(
     return reply_tree_node
 
 
-@app.get("/articles/{short_id}/{slug}")
+@app.get("/articles/{short_id}/{slug}", response_model=None)
 async def article_by_slug(
     short_id: str,
     slug: str,
@@ -910,7 +982,7 @@ async def article_by_slug(
     )
 
 
-@app.get("/o/{public_id}/activity")
+@app.get("/o/{public_id}/activity", response_model=None)
 async def outbox_activity_by_public_id(
     public_id: str,
     request: Request,
@@ -933,7 +1005,7 @@ async def outbox_activity_by_public_id(
     return ActivityPubResponse(ap.wrap_object(maybe_object.ap_object))
 
 
-@app.get("/t/{tag}")
+@app.get("/t/{tag}", response_model=None)
 async def tag_by_name(
     tag: str,
     request: Request,
@@ -1005,7 +1077,7 @@ async def tag_by_name(
     )
 
 
-@app.get("/e/{name}")
+@app.get("/e/{name}", response_model=None)
 def emoji_by_name(name: str) -> ActivityPubResponse:
     try:
         emoji = EMOJIS_BY_NAME[f":{name}:"]
@@ -1015,7 +1087,79 @@ def emoji_by_name(name: str) -> ActivityPubResponse:
     return ActivityPubResponse({"@context": ap.AS_EXTENDED_CTX, **emoji})
 
 
-@app.post("/inbox")
+@app.get("/inbox", response_model=None)
+async def get_inbox(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+    access_token_info: indieauth.AccessTokenInfo = Depends(
+        indieauth.enforce_access_token
+    ),
+    page: bool | None = None,
+    next_cursor: str | None = None,
+) -> ActivityPubResponse:
+    where = [
+        models.InboxObject.ap_type.in_(
+            ["Create", "Follow", "Like", "Announce", "Undo", "Update"]
+        )
+    ]
+    total_items = await db_session.scalar(
+        select(func.count(models.InboxObject.id)).where(*where)
+    )
+
+    if not page and not next_cursor:
+        return ActivityPubResponse(
+            {
+                "@context": ap.AS_CTX,
+                "id": ID + "/inbox",
+                "first": ID + "/inbox?page=true",
+                "type": "OrderedCollection",
+                "totalItems": total_items,
+            }
+        )
+
+    q = (
+        select(models.InboxObject)
+        .where(*where)
+        .order_by(models.InboxObject.created_at.desc())
+    )  # type: ignore
+    if next_cursor:
+        q = q.where(
+            models.InboxObject.created_at
+            < pagination.decode_cursor(next_cursor)  # type: ignore
+        )
+    q = q.limit(20)
+
+    items = [item for item in (await db_session.scalars(q)).all()]
+    next_cursor = None
+    if (
+        items
+        and await db_session.scalar(
+            select(func.count(models.InboxObject.id)).where(
+                *where, models.InboxObject.created_at < items[-1].created_at
+            )
+        )
+        > 0
+    ):
+        next_cursor = pagination.encode_cursor(items[-1].created_at)
+
+    collection_page = {
+        "@context": ap.AS_CTX,
+        "id": (
+            ID + "/inbox?page=true"
+            if not next_cursor
+            else ID + f"/inbox?next_cursor={next_cursor}"
+        ),
+        "partOf": ID + "/inbox",
+        "type": "OrderedCollectionPage",
+        "orderedItems": [item.ap_object for item in items],
+    }
+    if next_cursor:
+        collection_page["next"] = ID + f"/inbox?next_cursor={next_cursor}"
+
+    return ActivityPubResponse(collection_page)
+
+
+@app.post("/inbox", response_model=None)
 async def inbox(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1028,7 +1172,7 @@ async def inbox(
     return Response(status_code=202)
 
 
-@app.get("/remote_follow")
+@app.get("/remote_follow", response_model=None)
 async def get_remote_follow(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1041,7 +1185,7 @@ async def get_remote_follow(
     )
 
 
-@app.post("/remote_follow")
+@app.post("/remote_follow", response_model=None)
 async def post_remote_follow(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1063,7 +1207,7 @@ async def post_remote_follow(
     )
 
 
-@app.get("/remote_interaction")
+@app.get("/remote_interaction", response_model=None)
 async def remote_interaction(
     request: Request,
     ap_id: str,
@@ -1084,7 +1228,7 @@ async def remote_interaction(
     )
 
 
-@app.post("/remote_interaction")
+@app.post("/remote_interaction", response_model=None)
 async def post_remote_interaction(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1107,15 +1251,19 @@ async def post_remote_interaction(
     )
 
 
-@app.get("/.well-known/webfinger")
+@app.get("/.well-known/webfinger", response_model=None)
 async def wellknown_webfinger(resource: str) -> JSONResponse:
     """Exposes/servers WebFinger data."""
-    if resource not in [f"acct:{USERNAME}@{DOMAIN}", ID]:
+    if resource not in [
+        f"acct:{USERNAME}@{WEBFINGER_DOMAIN}",
+        ID,
+        f"acct:{USERNAME}@{DOMAIN}",
+    ]:
         logger.info(f"Got invalid req for {resource}")
         raise HTTPException(status_code=404)
 
     out = {
-        "subject": f"acct:{USERNAME}@{DOMAIN}",
+        "subject": f"acct:{USERNAME}@{WEBFINGER_DOMAIN}",
         "aliases": [ID],
         "links": [
             {
@@ -1138,7 +1286,7 @@ async def wellknown_webfinger(resource: str) -> JSONResponse:
     )
 
 
-@app.get("/.well-known/nodeinfo")
+@app.get("/.well-known/nodeinfo", response_model=None)
 async def well_known_nodeinfo() -> dict[str, Any]:
     return {
         "links": [
@@ -1150,7 +1298,7 @@ async def well_known_nodeinfo() -> dict[str, Any]:
     }
 
 
-@app.get("/nodeinfo")
+@app.get("/nodeinfo", response_model=None)
 async def nodeinfo(
     db_session: AsyncSession = Depends(get_db_session),
 ):
@@ -1179,15 +1327,11 @@ async def nodeinfo(
     )
 
 
-proxy_client = httpx.AsyncClient(
-    follow_redirects=True,
-    timeout=httpx.Timeout(timeout=10.0),
-    transport=httpx.AsyncHTTPTransport(retries=1),
-)
-
-
 async def _proxy_get(
-    request: starlette.requests.Request, url: str, stream: bool
+    proxy_client: httpx.AsyncClient,
+    request: starlette.requests.Request,
+    url: str,
+    stream: bool,
 ) -> httpx.Response:
     # Request the URL (and filter request headers)
     proxy_req = proxy_client.build_request(
@@ -1228,24 +1372,35 @@ def _add_cache_control(headers: dict[str, str]) -> dict[str, str]:
     return {**headers, "Cache-Control": "max-age=31536000"}
 
 
-@app.get("/proxy/media/{exp}/{sig}/{encoded_url}")
+@app.get("/proxy/media/{exp}/{sig}/{encoded_url}", response_model=None)
 async def serve_proxy_media(
     request: Request,
     exp: int,
     sig: str,
     encoded_url: str,
+    background_tasks: fastapi.BackgroundTasks,
 ) -> StreamingResponse | PlainTextResponse:
     # Decode the base64-encoded URL
     url = base64.urlsafe_b64decode(encoded_url).decode()
     check_url(url)
     media.verify_proxied_media_sig(exp, url, sig)
 
-    proxy_resp = await _proxy_get(request, url, stream=True)
+    proxy_client = httpx.AsyncClient(
+        follow_redirects=True,
+        timeout=httpx.Timeout(timeout=10.0),
+        transport=httpx.AsyncHTTPTransport(retries=1),
+    )
+
+    async def _close_proxy_client():
+        await proxy_client.aclose()
+
+    background_tasks.add_task(_close_proxy_client)
+    proxy_resp = await _proxy_get(proxy_client, request, url, stream=True)
 
     if proxy_resp.status_code >= 300:
         logger.info(f"failed to proxy {url}, got {proxy_resp.status_code}")
+        await proxy_resp.aclose()
         return PlainTextResponse(
-            "proxy error",
             status_code=proxy_resp.status_code,
         )
 
@@ -1256,6 +1411,7 @@ async def serve_proxy_media(
             _filter_proxy_resp_headers(
                 proxy_resp,
                 [
+                    "content-encoding",
                     "content-length",
                     "content-type",
                     "content-range",
@@ -1271,23 +1427,26 @@ async def serve_proxy_media(
     )
 
 
-@app.get("/proxy/media/{exp}/{sig}/{encoded_url}/{size}")
+@app.get("/proxy/media/{exp}/{sig}/{encoded_url}/{size}", response_model=None)
 async def serve_proxy_media_resized(
     request: Request,
     exp: int,
     sig: str,
     encoded_url: str,
     size: int,
+    background_tasks: fastapi.BackgroundTasks,
 ) -> PlainTextResponse:
     if size not in {50, 740}:
         raise ValueError("Unsupported size")
+
+    is_webp_supported = "image/webp" in str(request.headers.get("accept"))
 
     # Decode the base64-encoded URL
     url = base64.urlsafe_b64decode(encoded_url).decode()
     check_url(url)
     media.verify_proxied_media_sig(exp, url, sig)
 
-    if cached_resp := _RESIZED_CACHE.get((url, size)):
+    if (cached_resp := _RESIZED_CACHE.get((url, size))) and is_webp_supported:
         resized_content, resized_mimetype, resp_headers = cached_resp
         return PlainTextResponse(
             resized_content,
@@ -1295,11 +1454,21 @@ async def serve_proxy_media_resized(
             headers=resp_headers,
         )
 
-    proxy_resp = await _proxy_get(request, url, stream=False)
+    proxy_client = httpx.AsyncClient(
+        follow_redirects=True,
+        timeout=httpx.Timeout(timeout=10.0),
+        transport=httpx.AsyncHTTPTransport(retries=1),
+    )
+
+    async def _close_proxy_client():
+        await proxy_client.aclose()
+
+    background_tasks.add_task(_close_proxy_client)
+    proxy_resp = await _proxy_get(proxy_client, request, url, stream=False)
     if proxy_resp.status_code >= 300:
         logger.info(f"failed to proxy {url}, got {proxy_resp.status_code}")
+        await proxy_resp.aclose()
         return PlainTextResponse(
-            "proxy error",
             status_code=proxy_resp.status_code,
         )
 
@@ -1325,10 +1494,10 @@ async def serve_proxy_media_resized(
         is_webp = False
         try:
             resized_buf = BytesIO()
-            i.save(resized_buf, format="webp")
-            is_webp = True
+            i.save(resized_buf, format="webp" if is_webp_supported else i.format)
+            is_webp = is_webp_supported
         except Exception:
-            logger.exception("Failed to convert to webp")
+            logger.exception("Failed to create thumbnail")
             resized_buf = BytesIO()
             i.save(resized_buf, format=i.format)
         resized_buf.seek(0)
@@ -1361,7 +1530,7 @@ async def serve_proxy_media_resized(
         )
 
 
-@app.get("/attachments/{content_hash}/{filename}")
+@app.get("/attachments/{content_hash}/{filename}", response_model=None)
 async def serve_attachment(
     content_hash: str,
     filename: str,
@@ -1384,8 +1553,9 @@ async def serve_attachment(
     )
 
 
-@app.get("/attachments/thumbnails/{content_hash}/{filename}")
+@app.get("/attachments/thumbnails/{content_hash}/{filename}", response_model=None)
 async def serve_attachment_thumbnail(
+    request: Request,
     content_hash: str,
     filename: str,
     db_session: AsyncSession = Depends(get_db_session),
@@ -1400,11 +1570,20 @@ async def serve_attachment_thumbnail(
     if not upload or not upload.has_thumbnail:
         raise HTTPException(status_code=404)
 
-    return FileResponse(
-        UPLOAD_DIR / (content_hash + "_resized"),
-        media_type="image/webp",
-        headers={"Cache-Control": "max-age=31536000"},
-    )
+    is_webp_supported = "image/webp" in str(request.headers.get("accept"))
+
+    if is_webp_supported:
+        return FileResponse(
+            UPLOAD_DIR / (content_hash + "_resized"),
+            media_type="image/webp",
+            headers={"Cache-Control": "max-age=31536000"},
+        )
+    else:
+        return FileResponse(
+            UPLOAD_DIR / content_hash,
+            media_type=upload.content_type,
+            headers={"Cache-Control": "max-age=31536000"},
+        )
 
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
@@ -1464,23 +1643,26 @@ async def json_feed(
             }
         )
     result = {
-        "version": "https://jsonfeed.org/version/1",
+        "version": "https://jsonfeed.org/version/1.1",
         "title": f"{LOCAL_ACTOR.display_name}'s microblog'",
         "home_page_url": LOCAL_ACTOR.url,
         "feed_url": BASE_URL + "/feed.json",
-        "author": {
-            "name": LOCAL_ACTOR.display_name,
-            "url": LOCAL_ACTOR.url,
-        },
+        "authors": [
+            {
+                "name": LOCAL_ACTOR.display_name,
+                "url": LOCAL_ACTOR.url,
+            }
+        ],
         "items": data,
     }
     if LOCAL_ACTOR.icon_url:
-        result["author"]["avatar"] = LOCAL_ACTOR.icon_url  # type: ignore
+        result["authors"][0]["avatar"] = LOCAL_ACTOR.icon_url  # type: ignore
     return result
 
 
 async def _gen_rss_feed(
     db_session: AsyncSession,
+    is_rss: bool,
 ):
     fg = FeedGenerator()
     fg.id(BASE_URL + "/feed.rss")
@@ -1511,8 +1693,12 @@ async def _gen_rss_feed(
 
         fe = fg.add_entry()
         fe.id(outbox_object.url)
+        if outbox_object.name is not None:
+            fe.title(outbox_object.name)
+        elif not is_rss:  # Atom feeds require a title
+            fe.title(outbox_object.url)
+
         fe.link(href=outbox_object.url)
-        fe.title(outbox_object.url)
         fe.description(content)
         fe.content(content)
         fe.published(outbox_object.ap_published_at.replace(tzinfo=timezone.utc))
@@ -1525,16 +1711,16 @@ async def rss_feed(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> PlainTextResponse:
     return PlainTextResponse(
-        (await _gen_rss_feed(db_session)).rss_str(),
+        (await _gen_rss_feed(db_session, is_rss=True)).rss_str(),
         headers={"Content-Type": "application/rss+xml"},
     )
 
 
-@app.get("/feed.atom")
+@app.get("/feed.atom", response_model=None)
 async def atom_feed(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> PlainTextResponse:
     return PlainTextResponse(
-        (await _gen_rss_feed(db_session)).atom_str(),
+        (await _gen_rss_feed(db_session, is_rss=False)).atom_str(),
         headers={"Content-Type": "application/atom+xml"},
     )

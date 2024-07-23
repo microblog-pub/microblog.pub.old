@@ -28,7 +28,7 @@ move-to:
 
 .PHONY: self-destruct
 self-destruct:
-	-docker run --rm --volume `pwd`/data:/app/data --volume `pwd`/app/static:/app/app/static microblogpub/microblogpub inv self-destruct
+	-docker run --rm --it --volume `pwd`/data:/app/data --volume `pwd`/app/static:/app/app/static microblogpub/microblogpub inv self-destruct
 
 .PHONY: reset-password
 reset-password:
@@ -41,3 +41,7 @@ check-config:
 .PHONY: compile-scss
 compile-scss:
 	-docker run --rm --volume `pwd`/data:/app/data --volume `pwd`/app/static:/app/app/static microblogpub/microblogpub inv compile-scss
+
+.PHONY: import-mastodon-following-accounts 
+import-mastodon-following-accounts:
+	-docker run --rm --volume `pwd`/data:/app/data --volume `pwd`/app/static:/app/app/static microblogpub/microblogpub inv import-mastodon-following-accounts $(path)
