@@ -3,7 +3,9 @@
 A self-hosted, single-user, ActivityPub-powered microblog created by [@tsileo](https://github.com/tsileo/microblog.pub).
 This repo and collective is a respectful attempt by the users of the project to keep it going!
 
-[![AGPL 3.0](https://img.shields.io/badge/license-AGPL_3.0-blue.svg?style=flat)](https://git.sr.ht/~tsileo/microblog.pub/tree/v2/item/LICENSE)
+[![AGPL 3.0](https://img.shields.io/badge/license-AGPL_3.0-blue.svg?style=flat)](LICENSE)
+
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md) 
 
 Instances in the wild:
 
@@ -29,7 +31,7 @@ Instances in the wild:
     - Strict access control for your outbox enforced via HTTP signature
  - **Little** Javascript
     - The UI is pure HTML/CSS
-    - Except for tiny bits of hand-written JS in the note composer to insert emoji and add alt text to images
+    - Except for tiny bits of hand-written JS
  - IndieWeb citizen
     - [IndieAuth](https://www.w3.org/TR/indieauth/) support (OAuth2 extension)
     - [Microformats](http://microformats.org/wiki/Main_Page) everywhere
@@ -56,6 +58,7 @@ Check out the [online documentation](https://microblog-pub.github.io/microblog.p
 This is where the project is being reanimated:
 
  - [ORG](https://github.com/microblog-pub/)
+ - [CONDUCT](code_of_conduct.md)
  - [CODE](https://github.com/microblog-pub/microblog.pub)
     - Contributions are more than welcomed via Pull Requests, but first, make sure to discuss your ideas and get assigned to an issue.
  - [DISCUSSION](https://github.com/microblog-pub/microblog.pub/discussions)
@@ -65,4 +68,4 @@ This is where the project is being reanimated:
 
 ## License
 
-The project is licensed under the GNU AGPL v3 LICENSE (see the LICENSE file).
+The project is licensed under the [GNU AGPL v3 LICENSE](LICENSE).

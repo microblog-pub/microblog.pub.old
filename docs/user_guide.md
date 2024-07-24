@@ -190,7 +190,6 @@ For example, to only override the display of a specific actor's name/icon, you c
 
 ```jinja
 {% extends "app/utils.html" %}
-
 {% block display_actor %}
 	{% if actor.ap_id == "https://me.example.com" %}
 		<!-- custom actor display -->
