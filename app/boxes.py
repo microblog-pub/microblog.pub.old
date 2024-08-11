@@ -786,7 +786,7 @@ async def send_vote(
         raise ValueError("Object has no context")
     context = in_reply_to_object.ap_context
 
-    # TODO: ensure the name are valid?
+    # ensure the name are valid
 
     # Save the answers
     in_reply_to_object.voted_for_answers = names
@@ -819,7 +819,9 @@ async def send_vote(
         for rcp in recipients:
             await new_outgoing_activity(db_session, rcp, outbox_object.id)
 
+    # commit db session
     await db_session.commit()
+    
     return vote_id
 
 
@@ -870,6 +872,19 @@ async def send_update(
     outbox_object.ap_object = note
     outbox_object.source = source
     outbox_object.revisions = revisions
+
+    if outbox_object.tags != tags:
+        # remove all the existing tags
+        for tag in outbox_object.tags or []:
+            db_session.delete(tag)
+
+        for tag in tags:
+            if tag["type"] == "Hashtag":
+                tagged_object = models.TaggedOutboxObject(
+                    tag=tag["name"][1:].lower(),
+                    outbox_object_id=outbox_object.id,
+                )
+                db_session.add(tagged_object)
 
     recipients = await _compute_recipients(db_session, note)
     for rcp in recipients:
