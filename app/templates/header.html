@@ -6,7 +6,7 @@
 	<span class="name">{{ local_actor.name }}</span>
 	<span class="p-name handle">{{ local_actor.handle }}</span>
 </a>
-<a class="label-btn follow" href="https://blog.joaocosta.eu/remote_follow">Follow</a>
+<a class="label-btn follow" href="{{ local_actor.url }}remote_follow">Follow</a>
 
 <div class="p-note summary">
 {{ local_actor.summary | safe }}
